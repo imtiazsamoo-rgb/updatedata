@@ -1,236 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enrollment Portal</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enrollment Portal</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      color: #222;
-    }
-
-    header {
-      background: #0b57d0;
-      color: white;
-      padding: 16px;
-      text-align: center;
-    }
-
-    header h2 {
-      margin: 0;
-      font-size: 20px;
-    }
-
-    .container {
-      padding: 12px;
-      max-width: 1100px;
-      margin: auto;
-    }
-
-    .filters {
-      background: white;
-      padding: 12px;
-      border-radius: 10px;
-      display: grid;
-      gap: 10px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    input, select, button {
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-    }
-
-    button {
-      background: #0b57d0;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .count {
-      margin: 10px 0;
-      font-weight: bold;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 14px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .photo {
-      width: 100%;
-      height: 220px;
-      object-fit: cover;
-      border-radius: 10px;
-      background: #ddd;
-    }
-
-    .name {
-      font-size: 18px;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    .info {
-      margin-top: 6px;
-      font-size: 14px;
-      color: #444;
-    }
-
-    .status {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 5px 9px;
-      border-radius: 20px;
-      background: #e8f0fe;
-      color: #0b57d0;
-      font-size: 13px;
-      font-weight: bold;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 20px;
-      font-weight: bold;
-    }
-
-    @media (min-width: 700px) {
-      .filters {
-        grid-template-columns: 2fr 1fr 1fr auto;
-        align-items: center;
-      }
-    }
-  </style>
+<style>
+body{margin:0;font-family:Arial;background:#f4f6f8;color:#222}
+header{background:#0b57d0;color:white;padding:15px;text-align:center}
+.container{max-width:1150px;margin:auto;padding:12px}
+.card,.panel{background:white;border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 2px 8px #0001}
+input,select,button,textarea{padding:10px;border-radius:8px;border:1px solid #ccc;font-size:14px}
+button{background:#0b57d0;color:white;border:none;font-weight:bold;cursor:pointer}
+button.secondary{background:#555}
+button.danger{background:#c5221f}
+.grid{display:grid;gap:10px}
+.filters{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.student-card{background:white;border-radius:12px;padding:10px;box-shadow:0 2px 8px #0001;cursor:pointer}
+.photo{width:100%;height:210px;object-fit:cover;border-radius:10px;background:#ddd}
+.name{font-size:17px;font-weight:bold;margin-top:8px}
+.info{font-size:14px;margin-top:5px;color:#444}
+.badge{display:inline-block;background:#e8f0fe;color:#0b57d0;border-radius:20px;padding:5px 9px;margin-top:6px;font-size:13px}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.stat{background:#fff;border-radius:12px;padding:15px;text-align:center;box-shadow:0 2px 8px #0001}
+.stat b{font-size:24px;color:#0b57d0}
+.hidden{display:none}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:10px;z-index:10}
+.modal-content{background:white;max-width:900px;width:100%;max-height:90vh;overflow:auto;border-radius:14px;padding:14px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+label{font-size:13px;font-weight:bold}
+.field{display:flex;flex-direction:column;gap:4px}
+table{width:100%;border-collapse:collapse;background:white}
+th,td{border:1px solid #ddd;padding:8px;font-size:13px}
+th{background:#eef3ff}
+</style>
 </head>
 
 <body>
 
 <header>
   <h2>INDUS BRIGHT FUTURE SCHOOL SYSTEM</h2>
-  <div>Enrollment Portal</div>
+  <div>School Enrollment Portal</div>
 </header>
 
 <div class="container">
 
-  <div class="filters">
-    <input type="text" id="search" placeholder="Search GR#, Student Name, Father Name">
-
-    <select id="classFilter">
-      <option value="">All Classes</option>
-      <option value="I">I</option>
-      <option value="II">II</option>
-      <option value="III">III</option>
-      <option value="IV">IV</option>
-      <option value="V">V</option>
-      <option value="VI">VI</option>
-      <option value="VII">VII</option>
-      <option value="VIII">VIII</option>
-    </select>
-
-    <select id="statusFilter">
-      <option value="">All Status</option>
-      <option value="New Enrollment">New Enrollment</option>
-      <option value="Promoted">Promoted</option>
-      <option value="Retained">Retained</option>
-      <option value="Dropout">Dropout</option>
-      <option value="Passout">Passout</option>
-    </select>
-
-    <button onclick="loadStudents()">Search</button>
+  <div id="loginBox" class="panel">
+    <h3>Login</h3>
+    <div class="grid filters">
+      <input id="email" type="email" placeholder="Enter your registered email">
+      <button onclick="login()">Login</button>
+    </div>
+    <p id="loginMsg"></p>
   </div>
 
-  <div class="count" id="count">Loading...</div>
+  <div id="appBox" class="hidden">
 
-  <div class="cards" id="cards"></div>
+    <div class="panel">
+      <b id="userInfo"></b>
+    </div>
 
+    <div class="grid stats">
+      <div class="stat">Enrollment<br><b id="totalEnrollment">0</b></div>
+      <div class="stat">Male<br><b id="maleCount">0</b></div>
+      <div class="stat">Female<br><b id="femaleCount">0</b></div>
+      <div class="stat">Dropout<br><b id="dropoutCount">0</b></div>
+      <div class="stat">Passout<br><b id="passoutCount">0</b></div>
+    </div>
+
+    <div class="panel">
+      <h3>Filters</h3>
+      <div class="grid filters">
+        <input id="schoolFilter" placeholder="New School Code">
+        <input id="search" placeholder="GR#, Student Name, Father Name">
+
+        <select id="classFilter">
+          <option value="">All Classes</option>
+          <option>I</option><option>II</option><option>III</option><option>IV</option>
+          <option>V</option><option>VI</option><option>VII</option><option>VIII</option>
+        </select>
+
+        <select id="statusFilter">
+          <option value="">All Status</option>
+          <option>New Enrollment</option>
+          <option>Promoted</option>
+          <option>Retained</option>
+          <option>Dropout</option>
+          <option>Passout</option>
+        </select>
+
+        <button onclick="loadAll()">Search</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Download Reports</h3>
+      <div class="grid filters">
+        <button onclick="downloadReport('newEnrollment')">New Enrollment</button>
+        <button onclick="downloadReport('totalEnrollment')">Total Enrollment</button>
+        <button onclick="downloadReport('classWise')">Class-wise</button>
+        <button onclick="downloadReport('dropout')">Dropout</button>
+        <button onclick="downloadReport('passout')">Passout</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <b id="count">Total Records: 0</b>
+    </div>
+
+    <div id="cards" class="cards"></div>
+
+  </div>
+</div>
+
+<div id="detailModal" class="modal">
+  <div class="modal-content">
+    <h3>Student Detail</h3>
+
+    <div class="form-grid" id="detailForm"></div>
+
+    <br>
+    <button id="saveBtn" onclick="saveStudent()">Save</button>
+    <button class="secondary" onclick="closeModal()">Back</button>
+  </div>
 </div>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbxxxU35VnYrGP6GLeGczEhim__XQBy-YYhuJqHEcL1YA8q721h0DW2LXEGr0GdLtT1_/exec";
 
-function loadStudents() {
-  const search = document.getElementById("search").value.trim();
-  const classFilter = document.getElementById("classFilter").value;
-  const statusFilter = document.getElementById("statusFilter").value;
+let currentUser = null;
+let currentStudent = null;
 
+function api(params){
+  return fetch(API_URL + "?" + new URLSearchParams(params)).then(r=>r.json());
+}
+
+function login(){
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  document.getElementById("loginMsg").innerText = "Checking...";
+
+  api({action:"login", email}).then(data=>{
+    if(!data.success){
+      document.getElementById("loginMsg").innerText = data.message;
+      return;
+    }
+
+    currentUser = data.user;
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("appBox").classList.remove("hidden");
+
+    document.getElementById("userInfo").innerText =
+      currentUser.name + " | " + currentUser.role + " | " + currentUser.email;
+
+    if(currentUser.role !== "Admin"){
+      document.getElementById("schoolFilter").value = currentUser.schoolCode;
+      document.getElementById("schoolFilter").disabled = true;
+    }
+
+    loadAll();
+  });
+}
+
+function loadAll(){
+  loadDashboard();
+  loadStudents();
+}
+
+function getFilters(){
+  return {
+    schoolFilter: document.getElementById("schoolFilter").value.trim(),
+    search: document.getElementById("search").value.trim(),
+    classFilter: document.getElementById("classFilter").value,
+    statusFilter: document.getElementById("statusFilter").value
+  };
+}
+
+function loadDashboard(){
+  const f = getFilters();
+
+  api({
+    action:"dashboard",
+    schoolFilter:f.schoolFilter
+  }).then(data=>{
+    if(!data.success) return;
+
+    const d = data.dashboard;
+    document.getElementById("totalEnrollment").innerText = d.totalEnrollment;
+    document.getElementById("maleCount").innerText = d.male;
+    document.getElementById("femaleCount").innerText = d.female;
+    document.getElementById("dropoutCount").innerText = d.dropout;
+    document.getElementById("passoutCount").innerText = d.passout;
+  });
+}
+
+function loadStudents(){
+  const f = getFilters();
   document.getElementById("count").innerText = "Loading...";
   document.getElementById("cards").innerHTML = "";
 
-  const url =
-    API_URL +
-    "?action=searchStudents" +
-    "&search=" + encodeURIComponent(search) +
-    "&classFilter=" + encodeURIComponent(classFilter) +
-    "&statusFilter=" + encodeURIComponent(statusFilter);
-
-  fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success) {
-        document.getElementById("count").innerText = "Data load error";
-        return;
-      }
-
-      showStudents(data.students);
-    })
-    .catch(err => {
-      document.getElementById("count").innerText = "API error. Deployment access check ڪريو.";
-      console.error(err);
-    });
+  api({
+    action:"searchStudents",
+    schoolFilter:f.schoolFilter,
+    search:f.search,
+    classFilter:f.classFilter,
+    statusFilter:f.statusFilter
+  }).then(data=>{
+    if(!data.success){
+      document.getElementById("count").innerText = "Data load error";
+      return;
+    }
+    showStudents(data.students);
+  });
 }
 
-function showStudents(students) {
+function showStudents(students){
   const cards = document.getElementById("cards");
-  const count = document.getElementById("count");
-
-  count.innerText = "Total Records: " + students.length;
+  document.getElementById("count").innerText = "Total Records: " + students.length;
   cards.innerHTML = "";
 
-  if (students.length === 0) {
-    cards.innerHTML = "<div class='loading'>No student found</div>";
-    return;
-  }
-
-  students.forEach(s => {
+  students.forEach(s=>{
     const photo = s.photo || "https://via.placeholder.com/300x220?text=No+Photo";
 
     cards.innerHTML += `
-      <div class="card">
+      <div class="student-card" onclick="openStudent('${s.uniqueKey}')">
         <img class="photo" src="${photo}" onerror="this.src='https://via.placeholder.com/300x220?text=No+Photo'">
-
         <div class="name">${s.name || ""}</div>
-
         <div class="info"><b>GR#:</b> ${s.grNo || ""}</div>
         <div class="info"><b>Father:</b> ${s.father || ""}</div>
         <div class="info"><b>Class:</b> ${s.currentClass || ""}</div>
-        <div class="status">${s.status || ""}</div>
+        <div class="badge">${s.status || ""}</div>
       </div>
     `;
   });
 }
 
-document.getElementById("search").addEventListener("keyup", function(e) {
-  if (e.key === "Enter") loadStudents();
-});
+function openStudent(uniqueKey){
+  api({action:"getStudent", uniqueKey}).then(data=>{
+    if(!data.success){
+      alert(data.message);
+      return;
+    }
 
-loadStudents();
+    currentStudent = data.student;
+    renderDetail();
+    document.getElementById("detailModal").style.display = "flex";
+  });
+}
+
+function renderDetail(){
+  const editable = currentUser.canEdit;
+  document.getElementById("saveBtn").style.display = editable ? "inline-block" : "none";
+
+  const fields = [
+    "UniqueKey","SchoolCode","NewSchoolCode","GRNo","StudentName",
+    "FatherGuardianName","Gender","DOB","BFormNo","ClassAdmitted",
+    "CurrentClass","Religion","ResidentialAddress","ParentCNIC",
+    "ParentContact","EmergencyContact","DateOfAdmission","Shift",
+    "Status","PhotoURL","Remarks"
+  ];
+
+  const form = document.getElementById("detailForm");
+  form.innerHTML = "";
+
+  fields.forEach(field=>{
+    const readonly = field === "UniqueKey" || !editable ? "readonly" : "";
+
+    if(field === "Status" && editable){
+      form.innerHTML += `
+        <div class="field">
+          <label>${field}</label>
+          <select id="f_${field}">
+            ${["New Enrollment","Promoted","Retained","Dropout","Passout"].map(x =>
+              `<option ${currentStudent[field]==x?"selected":""}>${x}</option>`
+            ).join("")}
+          </select>
+        </div>`;
+    } else {
+      form.innerHTML += `
+        <div class="field">
+          <label>${field}</label>
+          <input id="f_${field}" value="${currentStudent[field] || ""}" ${readonly}>
+        </div>`;
+    }
+  });
+}
+
+function saveStudent(){
+  if(!currentUser.canEdit){
+    alert("Edit permission denied");
+    return;
+  }
+
+  const inputs = document.querySelectorAll("[id^='f_']");
+  let student = {};
+
+  inputs.forEach(el=>{
+    const key = el.id.replace("f_","");
+    student[key] = el.value;
+  });
+
+  fetch(API_URL, {
+    method:"POST",
+    body: JSON.stringify({
+      action:"updateStudent",
+      email:currentUser.email,
+      student
+    })
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    alert(data.message);
+    if(data.success){
+      closeModal();
+      loadAll();
+    }
+  });
+}
+
+function closeModal(){
+  document.getElementById("detailModal").style.display = "none";
+}
+
+function downloadReport(type){
+  if(!currentUser.canDownload){
+    alert("Download permission denied");
+    return;
+  }
+
+  const f = getFilters();
+
+  const url = API_URL + "?" + new URLSearchParams({
+    action:"downloadReport",
+    reportType:type,
+    schoolFilter:f.schoolFilter,
+    classFilter:f.classFilter,
+    email:currentUser.email
+  });
+
+  window.open(url, "_blank");
+}
+
+document.getElementById("search").addEventListener("keyup", e=>{
+  if(e.key === "Enter") loadAll();
+});
 </script>
 
 </body>
