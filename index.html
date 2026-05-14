@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IBFS Enrollment Lite Portal</title>
 <link rel="icon" href="data:,">
-
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#1f2937}
@@ -17,30 +16,37 @@ body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#1f2937}
 .panel{padding:14px;border-bottom:1px solid #e5e7eb}
 .box{background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:14px}
 .grid{display:grid;grid-template-columns:1fr;gap:12px}
-@media(min-width:760px){.grid.two{grid-template-columns:1fr 1fr}.grid.four{grid-template-columns:1.2fr 1fr 1fr 1fr}}
+@media(min-width:760px){.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:1fr 1fr 1fr}}
 label{font-weight:bold;font-size:14px}
-input,select,button,textarea{font:inherit}
-input,select,textarea{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;background:#fff}
-input[readonly]{background:#f3f4f6}
+input,select,button{font:inherit}
+input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;background:#fff}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .btn{border:0;border-radius:10px;padding:11px 14px;font-weight:bold;cursor:pointer}
-.btn-primary{background:#2563eb;color:#fff}.btn-success{background:#16a34a;color:#fff}.btn-warning{background:#f59e0b;color:#fff}.btn-danger{background:#dc2626;color:#fff}.btn-secondary{background:#e5e7eb;color:#111827}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-success{background:#16a34a;color:#fff}
+.btn-warning{background:#f59e0b;color:#fff}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-secondary{background:#e5e7eb;color:#111827}
 .status{display:none;margin-top:12px;padding:12px;border-radius:10px;font-weight:bold}
-.status.show{display:block}.info{background:#dbeafe;color:#1d4ed8}.success{background:#dcfce7;color:#166534}.error{background:#fee2e2;color:#991b1b}
+.status.show{display:block}
+.info{background:#dbeafe;color:#1d4ed8}
+.success{background:#dcfce7;color:#166534}
+.error{background:#fee2e2;color:#991b1b}
 .hidden{display:none!important}
 .stats{display:grid;grid-template-columns:1fr;gap:10px}
 @media(min-width:760px){.stats{grid-template-columns:repeat(5,1fr)}}
-.stat{padding:15px;border-radius:14px;color:#fff}.total{background:#1d4ed8}.male{background:#16a34a}.female{background:#db2777}.dropout{background:#ea580c}.passout{background:#7c3aed}
-.stat .num{font-size:26px;font-weight:bold}
-.badge{background:#e5e7eb;border-radius:999px;padding:7px 10px;font-weight:bold}
-.student-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px;display:grid;grid-template-columns:64px 1fr;gap:10px;margin-top:10px;align-items:center}
-@media(min-width:760px){.student-card{grid-template-columns:64px 1fr 160px}}
-.student-thumb{width:64px;height:74px;background:#e5e7eb;border-radius:10px;overflow:hidden}
+.stat{padding:16px;border-radius:14px;color:#fff}
+.total{background:#1d4ed8}.male{background:#16a34a}.female{background:#db2777}.dropout{background:#dc2626}.passout{background:#6b7280}
+.stat .num{font-size:28px;font-weight:bold}
+.student-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px;display:grid;grid-template-columns:70px 1fr;gap:12px;margin-top:12px}
+@media(min-width:760px){.student-card{grid-template-columns:70px 1fr 180px}}
+.student-thumb{width:70px;height:70px;background:#e5e7eb;border-radius:50%;overflow:hidden}
 .student-thumb img{width:100%;height:100%;object-fit:cover}
 .small{font-size:14px;line-height:1.6;color:#4b5563}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:10px;z-index:50}
-.modal-inner{background:#fff;max-width:900px;width:100%;max-height:92vh;overflow:auto;border-radius:16px}
-.table{width:100%;border-collapse:collapse;margin-top:10px}.table th,.table td{border:1px solid #ddd;padding:7px;font-size:13px}.table th{background:#eef3ff}
+.badge{background:#e5e7eb;border-radius:999px;padding:7px 10px;font-weight:bold}
+table{width:100%;border-collapse:collapse;background:#fff;margin-top:10px}
+th,td{border:1px solid #ddd;padding:8px;font-size:13px}
+th{background:#dbeafe}
 </style>
 </head>
 
@@ -50,7 +56,7 @@ input[readonly]{background:#f3f4f6}
 
 <div class="header">
 <h1>Indus Bright Future School System</h1>
-<p>Lite Enrollment Portal</p>
+<p>School Enrollment Lite Portal</p>
 </div>
 
 <div class="panel" id="loginPanel">
@@ -58,9 +64,11 @@ input[readonly]{background:#f3f4f6}
 <h3>School Login</h3>
 <div class="grid two">
 <div><label>User Name / Email</label><input id="username" autocomplete="username"></div>
-<div><label>Password</label><input id="password" type="password" autocomplete="current-password"></div>
+<div><label>Password</label><input id="password" type="password"></div>
 </div>
-<div class="actions"><button class="btn btn-primary" onclick="loginUser()">Login</button></div>
+<div class="actions">
+<button class="btn btn-primary" onclick="loginUser()">Login</button>
+</div>
 <div id="loginStatus" class="status"></div>
 </div>
 </div>
@@ -70,9 +78,9 @@ input[readonly]{background:#f3f4f6}
 <div class="panel">
 <div class="actions">
 <span class="badge">School Code: <span id="loggedInSchoolLabel"></span></span>
-<span class="badge">User: <span id="loggedInUserLabel"></span></span>
-<button class="btn btn-primary" onclick="showBrowser()">Student Browser</button>
-<button class="btn btn-warning" onclick="showReports()">Reports</button>
+<button class="btn btn-primary" onclick="showDashboard()">Dashboard</button>
+<button class="btn btn-success" onclick="showSearch()">Search Student</button>
+<button class="btn btn-warning" onclick="showReports()">Download Reports</button>
 <button class="btn btn-danger" onclick="logoutUser()">Logout</button>
 </div>
 <div id="mainStatus" class="status"></div>
@@ -89,81 +97,143 @@ input[readonly]{background:#f3f4f6}
 <div id="classWiseBox"></div>
 </div>
 
-<div class="panel" id="browserPanel">
+<div class="panel hidden" id="searchPanel">
 <div class="box">
-<h3>Student Browser</h3>
-<div class="grid four">
-<div><label>Search GR / Student / Father</label><input id="searchText"></div>
+<h3>Search / Filter Students</h3>
+<div class="grid three">
+<div><label>Search GR / Name / Father</label><input id="searchText"></div>
 <div>
 <label>Class</label>
 <select id="classFilter">
 <option value="">All Classes</option>
-<option>Kachi</option><option>ECCE</option><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option><option>VI</option><option>VII</option><option>VIII</option>
+<option>Kachi</option><option>ECCE</option><option>I</option><option>II</option>
+<option>III</option><option>IV</option><option>V</option><option>VI</option>
+<option>VII</option><option>VIII</option>
 </select>
 </div>
 <div>
 <label>Status</label>
 <select id="statusFilter">
 <option value="">All Status</option>
-<option>New Enrollment</option><option>Promoted</option><option>Retained</option><option>Dropout</option><option>Passout</option>
+<option>New Enrollment</option>
+<option>Promoted</option>
+<option>Retained</option>
+<option>Dropout</option>
+<option>Passout</option>
 </select>
 </div>
-<div>
-<label>Limit</label>
-<select id="limitFilter"><option>10</option><option>20</option><option>50</option></select>
 </div>
+<div class="actions">
+<button class="btn btn-primary" onclick="searchStudents()">Search</button>
+<button class="btn btn-secondary" onclick="showDashboard()">Back</button>
 </div>
-<div class="actions"><button class="btn btn-primary" onclick="searchStudents()">Search</button></div>
-<div class="small">Default صرف 10 cards ڏيکاريندو، وڌيڪ لاءِ search يا limit استعمال ڪريو.</div>
-<div id="browserStatus" class="small"></div>
-<div id="studentCards"></div>
+<div id="searchStatus" class="small"></div>
+<div id="searchResultCard"></div>
 </div>
 </div>
 
 <div class="panel hidden" id="reportsPanel">
 <div class="box">
-<h3>Download Reports PDF</h3>
+<h3>Download Reports</h3>
 <div class="grid two">
 <div>
-<label>Report Type</label>
-<select id="reportType">
-<option value="newEnrollment">New Enrollment List</option>
-<option value="totalEnrollment">Total Enrollment List</option>
-<option value="classWise">Class-wise Enrollment</option>
-<option value="dropout">Dropout List</option>
-<option value="passout">Passout List</option>
+<label>Class for Class-wise Report</label>
+<select id="reportClass">
+<option value="">Select Class</option>
+<option>Kachi</option><option>ECCE</option><option>I</option><option>II</option>
+<option>III</option><option>IV</option><option>V</option><option>VI</option>
+<option>VII</option><option>VIII</option>
+</select>
+</div>
+</div>
+<div class="actions">
+<button class="btn btn-warning" onclick="downloadPdf('newEnrollment')">New Enrollment PDF</button>
+<button class="btn btn-warning" onclick="downloadPdf('totalEnrollment')">Total Enrollment PDF</button>
+<button class="btn btn-warning" onclick="downloadPdf('classWise')">Class-wise PDF</button>
+<button class="btn btn-warning" onclick="downloadPdf('dropout')">Dropout PDF</button>
+<button class="btn btn-warning" onclick="downloadPdf('passout')">Passout PDF</button>
+<button class="btn btn-secondary" onclick="showDashboard()">Back</button>
+</div>
+</div>
+</div>
+
+<form id="studentForm" class="hidden" onsubmit="saveStudent(event)">
+<input type="hidden" id="uniqueKey">
+
+<div class="panel">
+<h3 id="formTitle">Student Detail</h3>
+
+<div class="grid two">
+<div><label>School Code</label><input id="schoolCode" readonly></div>
+<div><label>New School Code</label><input id="newSchoolCode" readonly></div>
+<div><label>GR No</label><input id="grNo"></div>
+<div><label>Student Name</label><input id="studentName"></div>
+<div><label>Father / Guardian Name</label><input id="fatherName"></div>
+<div>
+<label>Gender</label>
+<select id="gender"><option></option><option>Male</option><option>Female</option></select>
+</div>
+<div><label>DOB</label><input id="dob" type="date"></div>
+<div><label>B Form No</label><input id="bFormNo"></div>
+<div>
+<label>Class Admitted</label>
+<select id="classAdmitted">
+<option></option><option>Kachi</option><option>ECCE</option><option>I</option><option>II</option>
+<option>III</option><option>IV</option><option>V</option><option>VI</option>
+<option>VII</option><option>VIII</option>
 </select>
 </div>
 <div>
-<label>Class for Class-wise</label>
-<select id="reportClass">
-<option value="">All / Select Class</option>
-<option>Kachi</option><option>ECCE</option><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option><option>VI</option><option>VII</option><option>VIII</option>
+<label>Current Class</label>
+<select id="currentClass">
+<option></option><option>Kachi</option><option>ECCE</option><option>I</option><option>II</option>
+<option>III</option><option>IV</option><option>V</option><option>VI</option>
+<option>VII</option><option>VIII</option>
 </select>
 </div>
+<div>
+<label>Religion</label>
+<select id="religion"><option></option><option>Islam</option><option>Hindu</option><option>Christian</option></select>
 </div>
-<div class="actions">
-<button class="btn btn-warning" onclick="downloadPdf()">Download PDF</button>
-<button class="btn btn-secondary" onclick="showBrowser()">Back</button>
+<div><label>Parent CNIC</label><input id="parentCnic"></div>
+<div><label>Parent Contact</label><input id="parentContact"></div>
+<div><label>Emergency Contact</label><input id="emergencyContact"></div>
+<div><label>Date of Admission</label><input id="dateOfAdmission" type="date"></div>
+<div>
+<label>Shift</label>
+<select id="shift"><option></option><option>Morning</option><option>Evening</option></select>
 </div>
-<div id="reportStatus" class="status"></div>
+<div>
+<label>Status</label>
+<select id="status">
+<option>New Enrollment</option>
+<option>Promoted</option>
+<option>Retained</option>
+<option>Dropout</option>
+<option>Passout</option>
+</select>
 </div>
+<div><label>Photo URL</label><input id="photoUrl"></div>
 </div>
 
-</div>
-</div>
+<div style="margin-top:12px">
+<label>Residential Address</label>
+<input id="address">
 </div>
 
-<div class="modal" id="detailModal">
-<div class="modal-inner">
-<div class="panel">
-<h3>Student Detail / Edit</h3>
-<div id="detailForm" class="grid two"></div>
-<div class="actions">
-<button id="saveBtn" class="btn btn-success" onclick="saveStudent()">Save</button>
-<button class="btn btn-secondary" onclick="closeDetail()">Back</button>
+<div style="margin-top:12px">
+<label>Remarks</label>
+<input id="remarks">
 </div>
-<div id="detailStatus" class="status"></div>
+
+<div id="formStatus" class="status"></div>
+<div class="actions">
+<button class="btn btn-success" type="submit">Save</button>
+<button class="btn btn-secondary" type="button" onclick="showSearch()">Back</button>
+</div>
+</div>
+</form>
+
 </div>
 </div>
 </div>
@@ -171,14 +241,18 @@ input[readonly]{background:#f3f4f6}
 <script>
 const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxxxU35VnYrGP6GLeGczEhim__XQBy-YYhuJqHEcL1YA8q721h0DW2LXEGr0GdLtT1_/exec";
 
+let loggedInSchoolCode = "";
 let currentUser = null;
-let currentRecord = null;
 
 function clean(v){return String(v||"").trim()}
 function show(id){document.getElementById(id).classList.remove("hidden")}
 function hide(id){document.getElementById(id).classList.add("hidden")}
-function status(id,msg,type="info"){const e=document.getElementById(id);e.textContent=msg;e.className="status show "+type}
-function clearStatus(id){const e=document.getElementById(id);if(e){e.textContent="";e.className="status"}}
+
+function status(id,msg,type="info"){
+  const e=document.getElementById(id);
+  e.textContent=msg;
+  e.className="status show "+type;
+}
 
 async function postToScript(payload){
   const r = await fetch(APPS_SCRIPT_WEB_APP_URL,{
@@ -187,202 +261,256 @@ async function postToScript(payload){
     body:JSON.stringify(payload)
   });
   const text = await r.text();
-  if(text.trim().startsWith("<")) throw new Error("Apps Script deploy/access issue.");
-  try{return JSON.parse(text)}catch(e){throw new Error("Invalid server response: "+text.substring(0,120))}
+  if(text.trim().startsWith("<")) throw new Error("Apps Script deployment/access issue.");
+  return JSON.parse(text);
 }
 
-function basePayload(extra={}){
-  return Object.assign({
-    username: currentUser?.username || currentUser?.email || "",
-    role: currentUser?.role || "School",
-    loginSchoolCode: currentUser?.schoolCode || "",
-    schoolCode: currentUser?.schoolCode || ""
-  }, extra);
+function photoUrl(url){
+  if(!url)return "";
+  const m=String(url).match(/[-\w]{25,}/);
+  return m ? `https://drive.google.com/thumbnail?id=${m[0]}&sz=w120` : url;
 }
 
-/* LOGIN */
 async function loginUser(){
-  clearStatus("loginStatus");
   const username=clean(document.getElementById("username").value);
   const password=clean(document.getElementById("password").value);
-  if(!username||!password){status("loginStatus","User name ۽ password required آهن.","error");return}
+
+  if(!username||!password){
+    status("loginStatus","User name/email ۽ password required.","error");
+    return;
+  }
 
   try{
     const res=await postToScript({action:"login",username,password});
-    if(!res.success) throw new Error(res.message||"Login failed");
 
-    currentUser=res.user;
-    localStorage.setItem("IBFS_ENROLLMENT_USER",JSON.stringify(currentUser));
+    if(!res.success)throw new Error(res.message||"Login failed");
 
-    document.getElementById("loggedInSchoolLabel").textContent=currentUser.schoolCode;
-    document.getElementById("loggedInUserLabel").textContent=currentUser.name || currentUser.username;
+    currentUser=res.user||res;
+    loggedInSchoolCode=clean(res.schoolCode || currentUser.schoolCode || currentUser.SchoolCode);
 
+    localStorage.setItem("ibfsUser",JSON.stringify({username,password,schoolCode:loggedInSchoolCode,currentUser}));
+
+    document.getElementById("loggedInSchoolLabel").textContent=loggedInSchoolCode;
     hide("loginPanel");
     show("appPanel");
     await loadDashboard();
-    showBrowser();
-    await searchStudents();
-  }catch(e){status("loginStatus",e.message,"error")}
+    showDashboard();
+
+  }catch(e){
+    status("loginStatus",e.message,"error");
+  }
 }
 
 function logoutUser(){
-  localStorage.removeItem("IBFS_ENROLLMENT_USER");
+  localStorage.removeItem("ibfsUser");
   location.reload();
 }
 
-async function autoLogin(){
-  const saved=localStorage.getItem("IBFS_ENROLLMENT_USER");
-  if(!saved)return;
-  try{
-    currentUser=JSON.parse(saved);
-    document.getElementById("loggedInSchoolLabel").textContent=currentUser.schoolCode;
-    document.getElementById("loggedInUserLabel").textContent=currentUser.name || currentUser.username;
-    hide("loginPanel");show("appPanel");
-    await loadDashboard();showBrowser();await searchStudents();
-  }catch(e){}
+window.addEventListener("load",()=>{
+  const saved=localStorage.getItem("ibfsUser");
+  if(saved){
+    try{
+      const u=JSON.parse(saved);
+      document.getElementById("username").value=u.username||"";
+      document.getElementById("password").value=u.password||"";
+    }catch(e){}
+  }
+});
+
+function hideAll(){
+  hide("dashboardPanel");
+  hide("searchPanel");
+  hide("reportsPanel");
+  hide("studentForm");
 }
 
-/* DASHBOARD */
+function showDashboard(){
+  hideAll();
+  show("dashboardPanel");
+}
+
+function showSearch(){
+  hideAll();
+  show("searchPanel");
+}
+
+function showReports(){
+  hideAll();
+  show("reportsPanel");
+}
+
 async function loadDashboard(){
   try{
-    const res=await postToScript(basePayload({action:"dashboard"}));
+    const res=await postToScript({action:"dashboard",schoolCode:loggedInSchoolCode});
     if(!res.success)throw new Error(res.message||"Dashboard failed");
-    document.getElementById("totalCount").textContent=res.total||0;
+
+    document.getElementById("totalCount").textContent=res.totalEnrollment||res.total||0;
     document.getElementById("maleCount").textContent=res.male||0;
     document.getElementById("femaleCount").textContent=res.female||0;
     document.getElementById("dropoutCount").textContent=res.dropout||0;
     document.getElementById("passoutCount").textContent=res.passout||0;
 
-    const box=document.getElementById("classWiseBox");
-    const cw=res.classWise||{};
-    let html="<table class='table'><tr><th>Class</th><th>Male</th><th>Female</th><th>Total</th></tr>";
-    Object.keys(cw).sort().forEach(k=>{
-      html+=`<tr><td>${k}</td><td>${cw[k].male}</td><td>${cw[k].female}</td><td>${cw[k].total}</td></tr>`;
-    });
-    html+="</table>";
-    box.innerHTML=html;
-  }catch(e){status("mainStatus",e.message,"error")}
+    let html="";
+    if(res.classWise){
+      html="<h3>Class-wise Enrollment</h3><table><tr><th>Class</th><th>Male</th><th>Female</th><th>Total</th></tr>";
+      Object.keys(res.classWise).forEach(cls=>{
+        const x=res.classWise[cls];
+        html+=`<tr><td>${cls}</td><td>${x.male||0}</td><td>${x.female||0}</td><td>${x.total||0}</td></tr>`;
+      });
+      html+="</table>";
+    }
+    document.getElementById("classWiseBox").innerHTML=html;
+
+  }catch(e){
+    status("mainStatus",e.message,"error");
+  }
 }
 
-function showBrowser(){show("dashboardPanel");show("browserPanel");hide("reportsPanel");clearStatus("mainStatus")}
-function showReports(){hide("browserPanel");show("reportsPanel")}
-
-/* SEARCH */
 async function searchStudents(){
-  const box=document.getElementById("studentCards");
-  const msg=document.getElementById("browserStatus");
-  box.innerHTML="";
-  msg.textContent="Loading...";
+  const search=clean(document.getElementById("searchText").value);
+  const classFilter=document.getElementById("classFilter").value;
+  const statusFilter=document.getElementById("statusFilter").value;
+
+  document.getElementById("searchResultCard").innerHTML="";
+  document.getElementById("searchStatus").textContent="Searching...";
 
   try{
-    const res=await postToScript(basePayload({
-      action:"search",
-      search:document.getElementById("searchText").value,
-      classFilter:document.getElementById("classFilter").value,
-      statusFilter:document.getElementById("statusFilter").value,
-      limit:document.getElementById("limitFilter").value
-    }));
+    const res=await postToScript({
+      action:"searchstudents",
+      schoolCode:loggedInSchoolCode,
+      search,
+      classFilter,
+      statusFilter,
+      limit:10
+    });
 
     if(!res.success)throw new Error(res.message||"Search failed");
-    msg.textContent="Records: "+res.students.length;
 
-    if(!res.students.length){
-      box.innerHTML="<div class='small'>No student found.</div>";
-      return;
-    }
+    renderCards(res.students||[]);
+    document.getElementById("searchStatus").textContent="Total shown: "+(res.students||[]).length;
 
-    res.students.forEach(s=>{
-      const img=s.photo?`<img src="${s.photo}" onerror="this.style.display='none'">`:"";
-      box.innerHTML+=`
+  }catch(e){
+    document.getElementById("searchStatus").textContent=e.message;
+  }
+}
+
+function renderCards(students){
+  const box=document.getElementById("searchResultCard");
+  box.innerHTML="";
+
+  if(!students.length){
+    box.innerHTML="<div class='small'>No student found.</div>";
+    return;
+  }
+
+  students.forEach(s=>{
+    const img=photoUrl(s.photo||s.PhotoURL);
+    box.innerHTML+=`
       <div class="student-card">
-        <div class="student-thumb">${img}</div>
+        <div class="student-thumb">${img?`<img src="${img}">`:""}</div>
         <div>
-          <b>${s.name||""}</b>
+          <b>${s.name||s.StudentName||""}</b>
           <div class="small">
-            Father: ${s.father||""}<br>
-            GR No: ${s.grNo||""} | Class: ${s.currentClass||""}<br>
-            Status: ${s.status||""}
+            Father: ${s.father||s.FatherGuardianName||""}<br>
+            GR No: ${s.grNo||s.GRNo||""}<br>
+            Class: ${s.currentClass||s.CurrentClass||""}<br>
+            Status: ${s.status||s.Status||""}
           </div>
         </div>
         <div class="actions" style="margin-top:0">
-          <button class="btn btn-primary" onclick="openDetail('${String(s.uniqueKey).replace(/'/g,"&#39;")}')">View/Edit</button>
+          <button class="btn btn-primary" onclick="openStudent('${s.uniqueKey||s.UniqueKey}')">Manage</button>
         </div>
       </div>`;
-    });
-  }catch(e){msg.textContent=e.message}
+  });
 }
 
-/* DETAIL / EDIT */
-async function openDetail(uniqueKey){
-  clearStatus("detailStatus");
+async function openStudent(uniqueKey){
   try{
-    const res=await postToScript(basePayload({action:"detail",uniqueKey}));
-    if(!res.success)throw new Error(res.message||"Not found");
-    currentRecord=res.record;
-    renderDetail();
-    document.getElementById("detailModal").style.display="flex";
-  }catch(e){status("mainStatus",e.message,"error")}
-}
-
-function renderDetail(){
-  const editable=!!currentUser.canEdit;
-  document.getElementById("saveBtn").style.display=editable?"inline-block":"none";
-
-  const fields=[
-    "UniqueKey","SchoolCode","NewSchoolCode","GRNo","StudentName","FatherGuardianName",
-    "Gender","DOB","BFormNo","ClassAdmitted","CurrentClass","Religion","ResidentialAddress",
-    "ParentCNIC","ParentContact","EmergencyContact","DateOfAdmission","Shift","Status","Remarks"
-  ];
-
-  let html="";
-  if(currentRecord.PhotoThumb){
-    html+=`<div><label>Photo</label><div class="student-thumb" style="width:100px;height:120px"><img src="${currentRecord.PhotoThumb}"></div></div>`;
+    const res=await postToScript({action:"getstudent",uniqueKey});
+    if(!res.success)throw new Error(res.message||"Student not found");
+    fillForm(res.student);
+  }catch(e){
+    status("mainStatus",e.message,"error");
   }
-
-  fields.forEach(f=>{
-    const ro=(!editable || ["UniqueKey","SchoolCode","NewSchoolCode","GRNo"].includes(f))?"readonly":"";
-    if(f==="Status" && editable && currentUser.canChangeStatus){
-      html+=`<div><label>${f}</label><select id="f_${f}">
-        ${["New Enrollment","Promoted","Retained","Dropout","Passout"].map(x=>`<option ${currentRecord[f]===x?"selected":""}>${x}</option>`).join("")}
-      </select></div>`;
-    }else if((f==="CurrentClass" || f==="ClassAdmitted") && editable){
-      html+=`<div><label>${f}</label><select id="f_${f}">
-        ${["Kachi","ECCE","I","II","III","IV","V","VI","VII","VIII"].map(x=>`<option ${currentRecord[f]===x?"selected":""}>${x}</option>`).join("")}
-      </select></div>`;
-    }else if((f==="DOB" || f==="DateOfAdmission") && editable){
-      html+=`<div><label>${f}</label><input type="date" id="f_${f}" value="${currentRecord[f]||""}" ${ro}></div>`;
-    }else{
-      html+=`<div><label>${f}</label><input id="f_${f}" value="${String(currentRecord[f]||"").replace(/"/g,"&quot;")}" ${ro}></div>`;
-    }
-  });
-
-  document.getElementById("detailForm").innerHTML=html;
 }
 
-async function saveStudent(){
-  if(!currentUser.canEdit){status("detailStatus","Edit permission denied.","error");return}
-  const student={UniqueKey:currentRecord.UniqueKey};
-  document.querySelectorAll("[id^='f_']").forEach(el=>{
-    const key=el.id.replace("f_","");
-    student[key]=el.value;
-  });
+function formatDateInput(v){
+  if(!v)return "";
+  const d=new Date(v);
+  if(isNaN(d))return "";
+  return d.toISOString().slice(0,10);
+}
+
+function fillForm(s){
+  hideAll();
+  show("studentForm");
+
+  document.getElementById("uniqueKey").value=s.UniqueKey||"";
+  document.getElementById("schoolCode").value=s.SchoolCode||"";
+  document.getElementById("newSchoolCode").value=s.NewSchoolCode||"";
+  document.getElementById("grNo").value=s.GRNo||"";
+  document.getElementById("studentName").value=s.StudentName||"";
+  document.getElementById("fatherName").value=s.FatherGuardianName||"";
+  document.getElementById("gender").value=s.Gender||"";
+  document.getElementById("dob").value=formatDateInput(s.DOB);
+  document.getElementById("bFormNo").value=s.BFormNo||"";
+  document.getElementById("classAdmitted").value=s.ClassAdmitted||"";
+  document.getElementById("currentClass").value=s.CurrentClass||"";
+  document.getElementById("religion").value=s.Religion||"";
+  document.getElementById("address").value=s.ResidentialAddress||"";
+  document.getElementById("parentCnic").value=s.ParentCNIC||"";
+  document.getElementById("parentContact").value=s.ParentContact||"";
+  document.getElementById("emergencyContact").value=s.EmergencyContact||"";
+  document.getElementById("dateOfAdmission").value=formatDateInput(s.DateOfAdmission);
+  document.getElementById("shift").value=s.Shift||"";
+  document.getElementById("status").value=s.Status||"";
+  document.getElementById("photoUrl").value=s.PhotoURL||"";
+  document.getElementById("remarks").value=s.Remarks||"";
+}
+
+async function saveStudent(e){
+  e.preventDefault();
+
+  const student={
+    UniqueKey:document.getElementById("uniqueKey").value,
+    SchoolCode:document.getElementById("schoolCode").value,
+    NewSchoolCode:document.getElementById("newSchoolCode").value,
+    GRNo:document.getElementById("grNo").value,
+    StudentName:document.getElementById("studentName").value,
+    FatherGuardianName:document.getElementById("fatherName").value,
+    Gender:document.getElementById("gender").value,
+    DOB:document.getElementById("dob").value,
+    BFormNo:document.getElementById("bFormNo").value,
+    ClassAdmitted:document.getElementById("classAdmitted").value,
+    CurrentClass:document.getElementById("currentClass").value,
+    Religion:document.getElementById("religion").value,
+    ResidentialAddress:document.getElementById("address").value,
+    ParentCNIC:document.getElementById("parentCnic").value,
+    ParentContact:document.getElementById("parentContact").value,
+    EmergencyContact:document.getElementById("emergencyContact").value,
+    DateOfAdmission:document.getElementById("dateOfAdmission").value,
+    Shift:document.getElementById("shift").value,
+    Status:document.getElementById("status").value,
+    PhotoURL:document.getElementById("photoUrl").value,
+    Remarks:document.getElementById("remarks").value
+  };
 
   try{
-    const res=await postToScript(basePayload({
-      action:"update",
-      canEdit:currentUser.canEdit,
+    const res=await postToScript({
+      action:"updatestudent",
+      email:currentUser.email||currentUser.Email||"",
       student
-    }));
+    });
+
     if(!res.success)throw new Error(res.message||"Save failed");
-    status("detailStatus",res.message||"Saved.","success");
+    status("formStatus",res.message||"Saved successfully.","success");
     await loadDashboard();
-    await searchStudents();
-  }catch(e){status("detailStatus",e.message,"error")}
+
+  }catch(err){
+    status("formStatus",err.message,"error");
+  }
 }
 
-function closeDetail(){document.getElementById("detailModal").style.display="none"}
-
-/* PDF */
 function base64ToBlob(base64,type){
   const bin=atob(base64);
   const arr=new Uint8Array(bin.length);
@@ -390,28 +518,36 @@ function base64ToBlob(base64,type){
   return new Blob([arr],{type});
 }
 
-async function downloadPdf(){
-  if(!currentUser.canDownload){status("reportStatus","Download permission denied.","error");return}
+async function downloadPdf(type){
   try{
-    status("reportStatus","Preparing PDF...","info");
-    const res=await postToScript(basePayload({
+    status("mainStatus","Preparing PDF...","info");
+
+    const res=await postToScript({
       action:"downloadpdf",
-      reportType:document.getElementById("reportType").value,
+      reportType:type,
+      schoolCode:loggedInSchoolCode,
       classFilter:document.getElementById("reportClass").value
-    }));
+    });
+
     if(!res.success)throw new Error(res.message||"PDF failed");
+    if(!res.pdfBase64)throw new Error("PDF data not received");
+
     const blob=base64ToBlob(res.pdfBase64,"application/pdf");
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
-    a.href=url;a.download=res.fileName||"report.pdf";
-    document.body.appendChild(a);a.click();a.remove();
+    a.href=url;
+    a.download=res.fileName||"report.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
-    status("reportStatus","PDF downloaded.","success");
-  }catch(e){status("reportStatus","PDF failed: "+e.message,"error")}
-}
 
-document.getElementById("searchText").addEventListener("keyup",e=>{if(e.key==="Enter")searchStudents()});
-autoLogin();
+    status("mainStatus","PDF downloaded.","success");
+
+  }catch(e){
+    status("mainStatus","PDF failed: "+e.message,"error");
+  }
+}
 </script>
 </body>
 </html>
