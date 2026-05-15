@@ -88,7 +88,7 @@ th{background:#dbeafe}
 <div id="appPanel" class="hidden">
 
 <div class="panel">
-<div class="actions">
+<div class="actions" id="topMainActions">
 <span class="badge">School Code: <span id="loggedInSchoolLabel"></span></span>
 <button class="btn btn-primary" onclick="showDashboard()">Dashboard</button>
 <button class="btn btn-success" onclick="newAdmission()">New Admission</button>
@@ -143,6 +143,14 @@ th{background:#dbeafe}
 <div class="box">
 <h3>Quick Status Change</h3>
 
+<div class="actions" id="statusTopActions">
+<button class="btn btn-primary" onclick="previewStatusStudent()">Find Student</button>
+<button class="btn btn-success" onclick="saveQuickStatus()">Save Student</button>
+<button class="btn btn-secondary" onclick="showStatusBack()">Back</button>
+<button class="btn btn-primary" onclick="showDashboard()">Dashboard</button>
+</div>
+
+
 <div class="grid three">
 <div><label>GR No</label><input id="statusGrNo" inputmode="numeric"></div>
 <div>
@@ -166,18 +174,14 @@ th{background:#dbeafe}
 </div>
 </div>
 <div class="small" style="margin-top:8px">
-Promoted, Retained ۽ Dropout لاءِ photo upload لازمي آهي. Dropout ڪرڻ سان saved student photo delete/clear ٿيندي.
+Photo upload is required for Promoted, Retained, and Dropout. If Dropout is selected, the saved student photo will be deleted/cleared.
 </div>
 <div id="quickPhotoPreviewBox" class="preview-box" style="margin-top:10px;min-height:150px">
 <img id="quickPhotoPreview" class="hidden" style="width:120px;height:150px;object-fit:cover">
 <span id="quickPhotoText">No status photo selected</span>
 </div>
 
-<div class="actions">
-<button class="btn btn-primary" onclick="previewStatusStudent()">Find Student</button>
-<button class="btn btn-success" onclick="saveQuickStatus()">Save Status</button>
-<button class="btn btn-secondary" onclick="showDashboard()">Back</button>
-</div>
+<div class="actions hidden" id="statusBottomActions"></div>
 
 <div id="statusChangeStatus" class="status"></div>
 <div id="statusStudentCard"></div>
@@ -585,6 +589,8 @@ function hideAll(){
 }
 
 async function showDashboard(){
+  const top = document.getElementById("topMainActions");
+  if(top) top.classList.remove("hidden");
   hideAll();
   show("dashboardPanel");
   clearStatus("mainStatus");
@@ -593,6 +599,8 @@ async function showDashboard(){
 }
 
 function showSearch(){
+  const top = document.getElementById("topMainActions");
+  if(top) top.classList.remove("hidden");
   hideAll();
   show("searchPanel");
   document.getElementById("searchResultCard").innerHTML="";
@@ -601,6 +609,8 @@ function showSearch(){
 
 function showStatusChange(){
   hideAll();
+  const top = document.getElementById("topMainActions");
+  if(top) top.classList.add("hidden");
   show("statusPanel");
   document.getElementById("statusStudentCard").innerHTML="";
   clearStatus("statusChangeStatus");
@@ -615,8 +625,16 @@ function showStatusChange(){
 }
 
 function showReports(){
+  const top = document.getElementById("topMainActions");
+  if(top) top.classList.remove("hidden");
   hideAll();
   show("reportsPanel");
+}
+
+function showStatusBack(){
+  const top = document.getElementById("topMainActions");
+  if(top) top.classList.remove("hidden");
+  showDashboard();
 }
 
 /* DASHBOARD */
@@ -802,6 +820,8 @@ async function deleteRecord(grNo,isOffline){
 
 /* FORM */
 function newAdmission(){
+  const top = document.getElementById("topMainActions");
+  if(top) top.classList.remove("hidden");
   resetForm();
   clearStatus("mainStatus");
   clearFormStatus();
@@ -1210,7 +1230,7 @@ async function saveQuickStatus(){
   }
 
   if(["Promoted","Retained","Dropout"].includes(newStatus) && !quickStatusPhotoBase64){
-    status("statusChangeStatus","Promoted, Retained يا Dropout لاءِ photo upload لازمي آهي.","error");
+    status("statusChangeStatus","Photo upload is required for Promoted, Retained, or Dropout.","error");
     return;
   }
 
