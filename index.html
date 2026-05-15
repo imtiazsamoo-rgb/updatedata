@@ -774,6 +774,20 @@ function resetForm(){
   document.getElementById("previewText").classList.remove("hidden");
 }
 
+
+function formatDateInput(v){
+  if(!v) return "";
+
+  if(typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)){
+    return v;
+  }
+
+  const d = new Date(v);
+  if(isNaN(d)) return "";
+
+  return d.toISOString().slice(0,10);
+}
+
 function fillForm(r){
   clearFormStatus();
   document.getElementById("mode").value="update";
