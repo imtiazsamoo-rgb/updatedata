@@ -93,6 +93,7 @@ th{background:#dbeafe}
 <button class="btn btn-primary" onclick="showDashboard()">Dashboard</button>
 <button class="btn btn-success" onclick="newAdmission()">New Admission</button>
 <button class="btn btn-primary" onclick="showSearch()">Search Student</button>
+<button class="btn btn-warning" onclick="showStatusChange()">Status Change</button>
 <button class="btn btn-warning" onclick="showReports()">Download PDF Reports</button>
 <button class="btn btn-secondary" onclick="syncOfflineRecords()">Sync Pending</button>
 <button class="btn btn-danger" onclick="logoutUser()">Logout</button>
@@ -134,6 +135,52 @@ th{background:#dbeafe}
 <button class="btn btn-secondary" onclick="prevPage()">Previous</button>
 <button class="btn btn-primary" onclick="nextPage()">Next</button>
 </div>
+</div>
+</div>
+
+
+<div class="panel hidden" id="statusPanel">
+<div class="box">
+<h3>Quick Status Change</h3>
+
+<div class="grid three">
+<div><label>GR No</label><input id="statusGrNo" inputmode="numeric"></div>
+<div>
+<label>New Status</label>
+<select id="quickStatus">
+<option value="">Select Status</option>
+<option value="New Enrollment">New Enrollment</option>
+<option value="Promoted">Promoted</option>
+<option value="Retained">Retained</option>
+<option value="Dropout">Dropout</option>
+<option value="Passout">Passout</option>
+</select>
+</div>
+<div>
+<label>Current Class Preview</label>
+<input id="quickClassPreview" readonly>
+</div>
+<div>
+<label>Status Photo</label>
+<input id="quickStatusPhoto" type="file" accept="image/*">
+</div>
+</div>
+<div class="small" style="margin-top:8px">
+Promoted, Retained ۽ Dropout لاءِ photo upload لازمي آهي. Dropout ڪرڻ سان saved student photo delete/clear ٿيندي.
+</div>
+<div id="quickPhotoPreviewBox" class="preview-box" style="margin-top:10px;min-height:150px">
+<img id="quickPhotoPreview" class="hidden" style="width:120px;height:150px;object-fit:cover">
+<span id="quickPhotoText">No status photo selected</span>
+</div>
+
+<div class="actions">
+<button class="btn btn-primary" onclick="previewStatusStudent()">Find Student</button>
+<button class="btn btn-success" onclick="saveQuickStatus()">Save Status</button>
+<button class="btn btn-secondary" onclick="showDashboard()">Back</button>
+</div>
+
+<div id="statusChangeStatus" class="status"></div>
+<div id="statusStudentCard"></div>
 </div>
 </div>
 
@@ -181,6 +228,8 @@ th{background:#dbeafe}
 
 <div><label>Parent CNIC</label><input id="fatherCnic" inputmode="numeric" maxlength="13"></div>
 <div><label>Parent Contact Number</label><input id="parentContact" inputmode="numeric" maxlength="11"></div>
+<div><label>Mother Name</label><input id="motherName"></div>
+<div><label>Mother CNIC</label><input id="motherCnic" inputmode="numeric" maxlength="13"></div>
 
 
 <div>
@@ -531,6 +580,7 @@ function hideAll(){
   hide("dashboardPanel");
   hide("searchPanel");
   hide("reportsPanel");
+  hide("statusPanel");
   hide("admissionForm");
 }
 
@@ -547,6 +597,21 @@ function showSearch(){
   show("searchPanel");
   document.getElementById("searchResultCard").innerHTML="";
   document.getElementById("searchStatus").textContent="";
+}
+
+function showStatusChange(){
+  hideAll();
+  show("statusPanel");
+  document.getElementById("statusStudentCard").innerHTML="";
+  clearStatus("statusChangeStatus");
+  document.getElementById("quickClassPreview").value="";
+  quickStatusPhotoBase64 = "";
+  if(document.getElementById("quickStatusPhoto")) document.getElementById("quickStatusPhoto").value = "";
+  if(document.getElementById("quickPhotoPreview")){
+    document.getElementById("quickPhotoPreview").src = "";
+    document.getElementById("quickPhotoPreview").classList.add("hidden");
+    document.getElementById("quickPhotoText").classList.remove("hidden");
+  }
 }
 
 function showReports(){
@@ -849,6 +914,8 @@ function collectPayload(action){
     fatherName:clean(document.getElementById("fatherName").value),
     fatherCnic:digitsOnly(document.getElementById("fatherCnic").value),
     parentContact:digitsOnly(document.getElementById("parentContact").value),
+    motherName:clean(document.getElementById("motherName").value),
+    motherCnic:digitsOnly(document.getElementById("motherCnic").value),
     gender:document.getElementById("gender").value,
     dob:document.getElementById("dob").value,
     admitClass:document.getElementById("admitClass").value,
@@ -872,6 +939,9 @@ function validatePayload(p){
   if(!p.surnameCast){focusField("surnameCast");return "Surname is required.";}
   if(!/^\d{13}$/.test(p.bFormNo)){focusField("bFormNo");return "B Form No must be 13 digits.";}
   if(!p.fatherName){focusField("fatherName");return "Father Name required.";}
+  if(!p.surnameCast){focusField("surnameCast");return "Surname / Caste required.";}
+  if(!p.motherName){focusField("motherName");return "Mother Name required.";}
+  if(!/^\d{13}$/.test(p.motherCnic)){focusField("motherCnic");return "Mother CNIC must be 13 digits.";}
   if(!/^\d{13}$/.test(p.fatherCnic)){focusField("fatherCnic");return "Father CNIC must be 13 digits.";}
   if(!/^\d{11}$/.test(p.parentContact)){focusField("parentContact");return "Parent Contact Number must be 11 digits.";}
   if(!p.gender){focusField("gender");return "Select Gender.";}
@@ -986,7 +1056,7 @@ document.getElementById("status").addEventListener("change", function(){
   const cls = currentClassEl.value;
 
   if(statusValue === "Promoted"){
-    currentClassEl.value = cls;
+    currentClassEl.value = nextClass(cls);
   }
 
   if(statusValue === "Retained"){
@@ -997,6 +1067,188 @@ document.getElementById("status").addEventListener("change", function(){
     currentClassEl.value = cls;
   }
 });
+
+
+/* QUICK STATUS CHANGE */
+let quickStatusCurrentStudent = null;
+
+let quickStatusPhotoBase64 = "";
+
+document.getElementById("quickStatusPhoto").addEventListener("change", e=>{
+  const file = e.target.files && e.target.files[0];
+  quickStatusPhotoBase64 = "";
+
+  document.getElementById("quickPhotoPreview").src = "";
+  document.getElementById("quickPhotoPreview").classList.add("hidden");
+  document.getElementById("quickPhotoText").classList.remove("hidden");
+
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement("canvas");
+      canvas.width = 300;
+      canvas.height = 400;
+      const ctx = canvas.getContext("2d");
+
+      const srcRatio = img.width / img.height;
+      const dstRatio = canvas.width / canvas.height;
+
+      let sx = 0, sy = 0, sw = img.width, sh = img.height;
+
+      if(srcRatio > dstRatio){
+        sw = img.height * dstRatio;
+        sx = (img.width - sw) / 2;
+      }else{
+        sh = img.width / dstRatio;
+        sy = (img.height - sh) / 2;
+      }
+
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      quickStatusPhotoBase64 = canvas.toDataURL("image/jpeg",0.5);
+
+      document.getElementById("quickPhotoPreview").src = quickStatusPhotoBase64;
+      document.getElementById("quickPhotoPreview").classList.remove("hidden");
+      document.getElementById("quickPhotoText").classList.add("hidden");
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+
+function nextClass(cls){
+  const i = CLASS_ORDER.indexOf(cls);
+  if(i !== -1 && i < CLASS_ORDER.length - 1) return CLASS_ORDER[i + 1];
+  return cls;
+}
+
+function statusClassPreview(currentClass, statusValue){
+  if(statusValue === "Promoted") return nextClass(currentClass);
+  if(statusValue === "Retained") return previousClass(currentClass);
+  return currentClass;
+}
+
+document.getElementById("quickStatus").addEventListener("change", function(){
+  if(!quickStatusCurrentStudent) return;
+  document.getElementById("quickClassPreview").value =
+    statusClassPreview(quickStatusCurrentStudent.currentClass || "", this.value);
+});
+
+async function previewStatusStudent(){
+  const grNo = digitsOnly(document.getElementById("statusGrNo").value);
+  const box = document.getElementById("statusStudentCard");
+  box.innerHTML = "";
+  quickStatusCurrentStudent = null;
+  document.getElementById("quickClassPreview").value = "";
+
+  if(!grNo){
+    status("statusChangeStatus","Enter GR No.","error");
+    return;
+  }
+
+  try{
+    status("statusChangeStatus","Searching...","info");
+
+    const res = await postToScript({
+      action:"getstudent",
+      schoolCode:loggedInSchoolCode,
+      grNo
+    });
+
+    if(!res.success) throw new Error(res.message || "Student not found.");
+
+    const s = res.student || res.record;
+    quickStatusCurrentStudent = {
+      grNo: s.GRNo || s.grNo,
+      name: s.StudentName || s.studentName,
+      father: s.FatherGuardianName || s.fatherName,
+      currentClass: s.CurrentClass || s.currentClass,
+      status: s.Status || s.status || "New Enrollment",
+      photo: s.PhotoURL || s.photoUrl || s.studentPhoto || ""
+    };
+
+    document.getElementById("quickStatus").value = quickStatusCurrentStudent.status;
+    document.getElementById("quickClassPreview").value = quickStatusCurrentStudent.currentClass || "";
+
+    const img = photoUrl(quickStatusCurrentStudent.photo);
+    box.innerHTML = `
+      <div class="student-card">
+        <div class="student-thumb">${img?`<img src="${img}">`:""}</div>
+        <div>
+          <b>${quickStatusCurrentStudent.name||""}</b>
+          <div class="small">
+            Father: ${quickStatusCurrentStudent.father||""}<br>
+            GR No: ${quickStatusCurrentStudent.grNo||""}<br>
+            Current Class: ${quickStatusCurrentStudent.currentClass||""}<br>
+            Current Status: ${quickStatusCurrentStudent.status||""}
+          </div>
+        </div>
+      </div>`;
+
+    status("statusChangeStatus","Student found. Select status and save.","success");
+
+  }catch(e){
+    status("statusChangeStatus",e.message,"error");
+  }
+}
+
+async function saveQuickStatus(){
+  const grNo = digitsOnly(document.getElementById("statusGrNo").value);
+  const newStatus = document.getElementById("quickStatus").value;
+
+  if(!grNo){
+    status("statusChangeStatus","Enter GR No.","error");
+    return;
+  }
+
+  if(!newStatus){
+    status("statusChangeStatus","Select status.","error");
+    return;
+  }
+
+  if(["Promoted","Retained","Dropout"].includes(newStatus) && !quickStatusPhotoBase64){
+    status("statusChangeStatus","Promoted, Retained يا Dropout لاءِ photo upload لازمي آهي.","error");
+    return;
+  }
+
+  try{
+    status("statusChangeStatus","Saving...","info");
+
+    const res = await postToScript({
+      action:"changestatus",
+      schoolCode:loggedInSchoolCode,
+      grNo,
+      status:newStatus,
+      statusPhotoBase64:quickStatusPhotoBase64,
+      updatedBy:currentUser && currentUser.username ? currentUser.username : ""
+    });
+
+    if(!res.success) throw new Error(res.message || "Status update failed.");
+
+    const s = res.student || {};
+    status(
+      "statusChangeStatus",
+      "Status saved. New Status: " + (s.status || newStatus) + " | Class: " + (s.currentClass || ""),
+      "success"
+    );
+
+    document.getElementById("quickClassPreview").value = s.currentClass || "";
+    quickStatusPhotoBase64 = "";
+    if(document.getElementById("quickStatusPhoto")) document.getElementById("quickStatusPhoto").value = "";
+    if(document.getElementById("quickPhotoPreview")){
+      document.getElementById("quickPhotoPreview").src = "";
+      document.getElementById("quickPhotoPreview").classList.add("hidden");
+      document.getElementById("quickPhotoText").classList.remove("hidden");
+    }
+    await loadDashboard();
+
+  }catch(e){
+    status("statusChangeStatus",e.message,"error");
+  }
+}
 
 /* PHOTO */
 document.getElementById("photoInput").addEventListener("change",async e=>{
