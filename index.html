@@ -3,62 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IBFS Enrollment Portal</title>
+<title>IBFS Professional Enrollment Portal</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 
 <style>
+
+:root{
+  --primary:#1d4ed8;
+  --primary-dark:#1e40af;
+  --success:#16a34a;
+  --warning:#d97706;
+  --danger:#dc2626;
+  --muted:#64748b;
+  --text:#0f172a;
+  --bg:#eef4ff;
+  --card:#ffffff;
+  --line:#e2e8f0;
+  --soft:#f8fafc;
+  --radius:18px;
+  --shadow:0 18px 45px rgba(15,23,42,.10);
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#1f2937}
-.container{max-width:1000px;margin:auto;padding:12px}
-.card{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(0,0,0,.08);overflow:hidden}
-.header{background:#2563eb;color:#fff;padding:18px}
-.header h1{margin:0;font-size:22px}
-.header p{margin:6px 0 0;font-size:14px}
-.panel{padding:14px;border-bottom:1px solid #e5e7eb}
-.box{background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:14px}
-.grid{display:grid;grid-template-columns:1fr;gap:12px}
-@media(min-width:760px){.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:1fr 1fr 1fr}}
-label{font-weight:bold;font-size:14px}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:
+    radial-gradient(circle at top left,rgba(37,99,235,.18),transparent 32rem),
+    linear-gradient(180deg,#f8fbff 0%,var(--bg) 100%);
+  color:var(--text);
+  min-height:100vh;
+}
+.container{max-width:1180px;margin:auto;padding:18px}
+.card{background:rgba(255,255,255,.92);border:1px solid rgba(226,232,240,.85);border-radius:26px;box-shadow:var(--shadow);overflow:hidden;backdrop-filter:blur(8px)}
+.header{
+  background:linear-gradient(135deg,var(--primary),#0f766e);
+  color:#fff;
+  padding:24px 26px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+.header h1{margin:0;font-size:26px;letter-spacing:.2px;font-weight:800}
+.header p{margin:7px 0 0;font-size:14px;opacity:.92}
+.header:after{content:"IBFS";font-size:34px;font-weight:900;letter-spacing:2px;opacity:.18;border:1px solid rgba(255,255,255,.35);border-radius:18px;padding:10px 14px}
+.panel{padding:18px 20px;border-bottom:1px solid var(--line)}
+.panel:last-child{border-bottom:0}
+.box{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+h3{margin:0 0 14px;font-size:18px;color:#111827}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:760px){.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:repeat(3,1fr)}}
+label{display:block;font-weight:700;font-size:13px;color:#334155;margin:0 0 6px}
 input,select,button{font:inherit}
-input,select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;background:#fff}
-.field-error{border:2px solid #dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,.18)!important}
-input[readonly]{background:#f3f4f6}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:bold;cursor:pointer}
-.btn-primary{background:#2563eb;color:#fff}
-.btn-success{background:#16a34a;color:#fff}
-.btn-warning{background:#f59e0b;color:#fff}
-.btn-danger{background:#dc2626;color:#fff}
-.btn-secondary{background:#e5e7eb;color:#111827}
-.status{display:none;margin-top:12px;padding:12px;border-radius:10px;font-weight:bold}
-.status.show{display:block}
-.info{background:#dbeafe;color:#1d4ed8}
-.success{background:#dcfce7;color:#166534}
-.error{background:#fee2e2;color:#991b1b}
+input,select{
+  width:100%;padding:12px 13px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#0f172a;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+input:focus,select:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px rgba(37,99,235,.14)}
+.field-error{border:2px solid var(--danger)!important;box-shadow:0 0 0 4px rgba(220,38,38,.16)!important}
+input[readonly]{background:#f1f5f9;color:#475569}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.btn{border:0;border-radius:12px;padding:11px 15px;font-weight:800;cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .15s;box-shadow:0 8px 20px rgba(15,23,42,.08)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(15,23,42,.12)}
+.btn:disabled{opacity:.65;cursor:not-allowed;transform:none}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-success{background:var(--success);color:#fff}.btn-warning{background:var(--warning);color:#fff}.btn-danger{background:var(--danger);color:#fff}.btn-secondary{background:#e2e8f0;color:#0f172a}
+.status{display:none;margin-top:14px;padding:13px 14px;border-radius:13px;font-weight:700;border:1px solid transparent}
+.status.show{display:block}.info{background:#dbeafe;color:#1d4ed8;border-color:#bfdbfe}.success{background:#dcfce7;color:#166534;border-color:#bbf7d0}.error{background:#fee2e2;color:#991b1b;border-color:#fecaca}
 .hidden{display:none!important}
-.stats{display:grid;grid-template-columns:1fr;gap:10px}
-@media(min-width:760px){.stats{grid-template-columns:repeat(5,1fr)}}
-.stat{padding:16px;border-radius:14px;color:#fff}
-.total{background:#1d4ed8}.male{background:#16a34a}.female{background:#db2777}.dropout{background:#dc2626}.passout{background:#6b7280}
-.stat .num{font-size:28px;font-weight:bold}
-.student-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px;display:grid;grid-template-columns:80px 1fr;gap:12px;margin-top:12px}
-@media(min-width:760px){.student-card{grid-template-columns:80px 1fr 190px}}
-.student-thumb{width:80px;height:100px;background:#e5e7eb;border-radius:10px;overflow:hidden}
-.student-thumb img{width:100%;height:100%;object-fit:cover}
-.small{font-size:14px;line-height:1.6;color:#4b5563}
-.badge{background:#e5e7eb;border-radius:999px;padding:7px 10px;font-weight:bold}
-.photo-wrap{display:grid;grid-template-columns:1fr;gap:12px}
-@media(min-width:760px){.photo-wrap{grid-template-columns:1fr 1fr}}
-.preview-box,.crop-box{min-height:260px;border:1px dashed #cbd5e1;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#f3f4f6}
-.preview-box img{width:220px;height:280px;object-fit:cover}
-.crop-box img{max-width:100%}
-.offline-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px;margin-top:12px}
-.offline-row{border-top:1px solid #fed7aa;padding-top:8px;margin-top:8px;font-size:13px}
-table{width:100%;border-collapse:collapse;background:#fff;margin-top:10px}
-th,td{border:1px solid #ddd;padding:8px;font-size:13px}
-th{background:#dbeafe}
-@media(max-width:520px){.btn{width:100%}.actions{display:grid;grid-template-columns:1fr}}
+.stats{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:760px){.stats{grid-template-columns:repeat(5,1fr)}}
+.stat{position:relative;overflow:hidden;padding:18px;border-radius:18px;color:#fff;min-height:110px;box-shadow:0 12px 28px rgba(15,23,42,.12)}
+.stat:after{content:"";position:absolute;right:-28px;bottom:-34px;width:100px;height:100px;border-radius:999px;background:rgba(255,255,255,.16)}
+.total{background:linear-gradient(135deg,#1d4ed8,#3b82f6)}.male{background:linear-gradient(135deg,#15803d,#22c55e)}.female{background:linear-gradient(135deg,#be185d,#ec4899)}.dropout{background:linear-gradient(135deg,#b91c1c,#ef4444)}.passout{background:linear-gradient(135deg,#475569,#94a3b8)}
+.stat .num{font-size:32px;font-weight:900;margin-top:8px}
+.student-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;grid-template-columns:82px 1fr;gap:14px;margin-top:14px;box-shadow:0 10px 24px rgba(15,23,42,.06)}
+@media(min-width:760px){.student-card{grid-template-columns:82px 1fr 200px}}
+.student-thumb{width:82px;height:104px;background:#e2e8f0;border-radius:14px;overflow:hidden;border:1px solid #cbd5e1}.student-thumb img{width:100%;height:100%;object-fit:cover}
+.small{font-size:14px;line-height:1.65;color:#475569}.badge{display:inline-flex;align-items:center;background:#eef2ff;border:1px solid #c7d2fe;color:#1e3a8a;border-radius:999px;padding:8px 12px;font-weight:800}
+.photo-wrap{display:grid;grid-template-columns:1fr;gap:14px}@media(min-width:760px){.photo-wrap{grid-template-columns:1fr 1fr}}
+.preview-box,.crop-box{min-height:280px;border:1px dashed #94a3b8;border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#f8fafc;color:#64748b}.preview-box img{width:220px;height:280px;object-fit:cover}.crop-box img{max-width:100%}
+.offline-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:18px;padding:14px;margin-top:16px}.offline-row{border-top:1px solid #fed7aa;padding-top:9px;margin-top:9px;font-size:13px;color:#7c2d12}
+table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden}th,td{border-bottom:1px solid var(--line);padding:10px;font-size:13px;text-align:left}tr:last-child td{border-bottom:0}th{background:#eff6ff;color:#1e3a8a;font-weight:900}
+#paginationBox{justify-content:flex-end}
+@media(max-width:520px){.container{padding:10px}.header{padding:20px;display:block}.header:after{display:none}.btn{width:100%}.actions{display:grid;grid-template-columns:1fr}.panel{padding:14px}.student-card{grid-template-columns:72px 1fr}.student-thumb{width:72px;height:92px}}
+
 </style>
 </head>
 
@@ -68,7 +98,7 @@ th{background:#dbeafe}
 
 <div class="header">
 <h1>Indus Bright Future School System</h1>
-<p>School Enrollment Portal</p>
+<p>Professional School Enrollment & Student Record Management Portal</p>
 </div>
 
 <div class="panel" id="loginPanel">
@@ -358,6 +388,13 @@ let lastSearchCount = 0;
 const CLASS_ORDER = ["Kachi","I","II","III","IV","V","VI","VII","VIII"];
 
 function digitsOnly(v){return String(v||"").replace(/\D/g,"")}
+function enforceDigits(id, max){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.addEventListener("input",()=>{ el.value=digitsOnly(el.value).slice(0,max); });
+}
+[ ["grNo",8], ["searchGrNo",8], ["statusGrNo",8], ["bFormNo",13], ["fatherCnic",13], ["motherCnic",13], ["parentContact",11] ].forEach(x=>enforceDigits(x[0],x[1]));
+
 function clean(v){return String(v||"").trim()}
 function show(el){document.getElementById(el).classList.remove("hidden")}
 function hide(el){document.getElementById(el).classList.add("hidden")}
@@ -575,7 +612,9 @@ async function loginUser(){
 }
 
 function logoutUser(){
-  localStorage.removeItem(offlineKey());
+  // Offline pending records are kept safe during logout.
+  loggedInSchoolCode = "";
+  currentUser = null;
   location.reload();
 }
 
@@ -895,6 +934,8 @@ function fillForm(r){
   document.getElementById("fatherName").value=val("fatherName","FatherGuardianName","FatherName");
   document.getElementById("fatherCnic").value=val("fatherCnic","ParentCNIC");
   document.getElementById("parentContact").value=val("parentContact","ParentContact");
+  document.getElementById("motherName").value=val("motherName","MotherName");
+  document.getElementById("motherCnic").value=val("motherCnic","MotherCNIC");
   document.getElementById("gender").value=val("gender","Gender");
   document.getElementById("dob").value=formatDateInput(val("dob","DOB"));
   document.getElementById("admitClass").value=val("admitClass","ClassAdmitted");
