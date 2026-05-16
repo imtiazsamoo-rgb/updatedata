@@ -169,7 +169,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margi
 <div class="box">
 <h3>Search Student</h3>
 <div class="grid two">
-<div><label>GR No <span class="small">(optional)</span></label><input id="searchGrNo" inputmode="numeric" placeholder="GR No لکبو ته صرف اهو شاگرد ايندو"></div>
+<div><label>GR No <span class="small">(optional)</span></label><input id="searchGrNo" inputmode="numeric" placeholder="Enter GR No to find one student"></div>
 <div>
 <label>Current Class <span class="small">(optional)</span></label>
 <select id="searchClass">
@@ -183,7 +183,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margi
 <button class="btn btn-primary" onclick="searchStudents(0)">Search</button>
 <button class="btn btn-secondary" onclick="clearSearchFilters()">Clear</button>
 </div>
-<div class="helper-note">ڪلاس چونڊيو ته ان ڪلاس جا سڀ شاگرد ايندا. GR No لکيو ته صرف اهو شاگرد ايندو، ڪلاس فلٽر نظرانداز ٿيندو.</div>
+<div class="helper-note">Select a class to show all students in that class. If GR No is entered, only that GR No student will be shown and class filter will be ignored.</div>
 <div id="searchStatus" class="small"></div>
 <div id="searchResultCard"></div>
 
@@ -733,21 +733,33 @@ async function loadDashboard(){
 }
 
 /* SEARCH */
-async function searchStudents(page=0){
-  currentPage = page;
+function normalizeStudent(s){
+  s = s || {};
+  return {
+    grNo: s.grNo || s.GRNo || s["GR No"] || s["GRNo"] || "",
+    name: s.name || s.studentName || s.StudentName || s["Student Name"] || "",
+    father: s.father || s.fatherName || s.FatherGuardianName || s.FatherName || s["Father Name"] || "",
+    currentClass: s.currentClass || s.CurrentClass || s["Current Class"] || "",
+    status: s.status || s.Status || "",
+    photo: s.photo || s.studentPhoto || s.PhotoURL || s.photoUrl || s["Photo URL"] || "",
+    offline: !!s.offline
+  };
+}
 
+async function searchStudents(page=0){
   const grNo = digitsOnly(document.getElementById("searchGrNo").value);
   const selectedClass = clean(document.getElementById("searchClass").value);
 
-  // Rule: GR No has first priority. If GR No is entered, class filter is ignored.
-  const searchMode = grNo ? "gr" : "class";
-  const classForSearch = grNo ? "" : selectedClass;
+  // GR No has first priority. Class search must return all students of that class.
+  const isGrSearch = !!grNo;
+  const classForSearch = isGrSearch ? "" : selectedClass;
+  currentPage = isGrSearch ? page : 0;
 
   document.getElementById("searchResultCard").innerHTML="";
   document.getElementById("searchStatus").textContent="Searching...";
 
   if(!grNo && !selectedClass){
-    document.getElementById("searchStatus").textContent="GR No لکو يا Current Class چونڊيو.";
+    document.getElementById("searchStatus").textContent="Enter GR No or select Current Class.";
     return;
   }
 
@@ -755,20 +767,27 @@ async function searchStudents(page=0){
     let res=null;
 
     if(navigator.onLine){
+      const payload = {
+        action:"searchstudents",
+        searchMode:isGrSearch ? "gr" : "class",
+        schoolCode:loggedInSchoolCode,
+        grNo:grNo,
+        currentClass:classForSearch,
+        searchClass:classForSearch,
+        className:classForSearch,
+        class:classForSearch,
+        limit:isGrSearch ? PAGE_SIZE : 5000,
+        offset:isGrSearch ? currentPage * PAGE_SIZE : 0
+      };
+
       try{
-        res=await postToScript({
-          action:"searchstudents",
-          searchMode,
-          schoolCode:loggedInSchoolCode,
-          grNo,
-          currentClass:classForSearch,
-          searchClass:classForSearch,
-          limit:PAGE_SIZE,
-          offset:currentPage * PAGE_SIZE
-        });
-      }catch(e){}
+        res=await postToScript(payload);
+      }catch(e){
+        res=null;
+      }
     }
 
+    // Offline fallback only. Online class search needs Apps Script to accept currentClass/searchClass/className.
     if(!res || !res.success){
       const found=getOffline().filter(x=>{
         if(grNo) return digitsOnly(x.payload.grNo)===grNo;
@@ -783,32 +802,30 @@ async function searchStudents(page=0){
         photo:x.payload.studentPhotoBase64,
         offline:true
       }));
-      res={success:true,students:cards,totalMatched:cards.length};
+      res={success:true,students:cards,totalMatched:cards.length,offlineOnly:true};
     }
 
     if(!res.success)throw new Error(res.message||"Search failed");
 
-    let students = res.students || [];
-
-    // Extra frontend safety filter: GR search returns only matching GR; class search returns all students of selected class.
-    students = students.filter(s=>{
-      const sGr = digitsOnly(s.grNo || s.GRNo);
-      const sClass = clean(s.currentClass || s.CurrentClass);
+    let rawStudents = res.students || res.records || res.data || [];
+    let students = rawStudents.map(normalizeStudent).filter(s=>{
+      const sGr = digitsOnly(s.grNo);
+      const sClass = clean(s.currentClass);
       if(grNo) return sGr === grNo;
       return sClass === classForSearch;
     });
 
     renderCards(students);
-
     lastSearchCount = students.length;
 
     if(lastSearchCount){
-      const filterText = grNo ? " | GR No: " + grNo : " | Class: " + classForSearch;
+      const filterText = grNo ? "GR No: " + grNo : "Class: " + classForSearch;
       document.getElementById("searchStatus").textContent =
-        "Showing "+((currentPage*PAGE_SIZE)+1)+" to "+
-        ((currentPage*PAGE_SIZE)+lastSearchCount)+filterText;
+        "Showing "+lastSearchCount+" student(s) | "+filterText;
     }else{
-      document.getElementById("searchStatus").textContent="No student found.";
+      document.getElementById("searchStatus").textContent = res.offlineOnly && navigator.onLine
+        ? "No student found. If class search still does not show online records, update Apps Script to support class search."
+        : "No student found.";
     }
 
   }catch(e){
@@ -834,7 +851,7 @@ function renderCards(students){
     return;
   }
 
-  students.forEach(s=>{
+  students.map(normalizeStudent).forEach(s=>{
     const img=s.offline ? s.photo : photoUrl(s.photo);
     const safeGr=safeAttr(s.grNo);
 
@@ -859,11 +876,13 @@ function renderCards(students){
 }
 
 function nextPage(){
+  if(clean(document.getElementById("searchClass").value) && !digitsOnly(document.getElementById("searchGrNo").value)) return;
   if(lastSearchCount < PAGE_SIZE) return;
   searchStudents(currentPage + 1);
 }
 
 function prevPage(){
+  if(clean(document.getElementById("searchClass").value) && !digitsOnly(document.getElementById("searchGrNo").value)) return;
   if(currentPage <= 0) return;
   searchStudents(currentPage - 1);
 }
