@@ -168,7 +168,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margi
 <div class="panel hidden" id="searchPanel">
 <div class="box">
 <h3>Search Student</h3>
-<div class="grid two">
+<div class="grid three">
 <div><label>GR No <span class="small">(optional)</span></label><input id="searchGrNo" inputmode="numeric" placeholder="Enter GR No to find one student"></div>
 <div>
 <label>Current Class <span class="small">(optional)</span></label>
@@ -178,12 +178,20 @@ table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margi
 <option>IV</option><option>V</option><option>VI</option><option>VII</option><option>VIII</option>
 </select>
 </div>
+<div>
+<label>Status <span class="small">(optional)</span></label>
+<select id="searchStatusFilter">
+<option value="">Select Status</option>
+<option value="Dropout">Dropout</option>
+<option value="Passout">Passout</option>
+</select>
+</div>
 </div>
 <div class="actions page-actions">
 <button class="btn btn-primary" onclick="searchStudents(0)">Search</button>
 <button class="btn btn-secondary" onclick="clearSearchFilters()">Clear</button>
 </div>
-<div class="helper-note">Select a class to show all students in that class. If GR No is entered, only that GR No student will be shown and class filter will be ignored.</div>
+<div class="helper-note">GR No shows one student. Class shows only active enrollment students. Status shows Dropout or Passout students.</div>
 <div id="searchStatus" class="small"></div>
 <div id="searchResultCard"></div>
 
@@ -222,7 +230,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margi
 </div>
 </div>
 <div class="small" style="margin-top:8px">
-Photo upload is required for Promoted, Retained, and Dropout. If Dropout is selected, the saved student photo will be deleted/cleared.
+Photo upload is required for Dropout. If a previously Dropout student is returned to New Enrollment, Promoted, or Retained, photo is required.
 </div>
 <div class="actions page-actions" id="statusTopActions">
 <button class="btn btn-primary" onclick="previewStatusStudent()">Find Student</button>
@@ -749,97 +757,135 @@ function normalizeStudent(s){
 async function searchStudents(page=0){
   const grNo = digitsOnly(document.getElementById("searchGrNo").value);
   const selectedClass = clean(document.getElementById("searchClass").value);
+  const selectedStatus = clean(document.getElementById("searchStatusFilter").value);
 
-  // GR No has first priority. Class search must return all students of that class.
   const isGrSearch = !!grNo;
-  const classForSearch = isGrSearch ? "" : selectedClass;
+  const isClassSearch = !grNo && !!selectedClass;
+  const isStatusSearch = !grNo && !selectedClass && !!selectedStatus;
+
+  // Priority rule: GR No > Class > Status
   currentPage = isGrSearch ? page : 0;
 
-  document.getElementById("searchResultCard").innerHTML="";
-  document.getElementById("searchStatus").textContent="Searching...";
+  document.getElementById("searchResultCard").innerHTML = "";
+  document.getElementById("searchStatus").textContent = "Searching...";
 
-  if(!grNo && !selectedClass){
-    document.getElementById("searchStatus").textContent="Enter GR No or select Current Class.";
+  if(!grNo && !selectedClass && !selectedStatus){
+    document.getElementById("searchStatus").textContent =
+      "Enter GR No, select Current Class, or select Dropout / Passout.";
     return;
   }
 
   try{
-    let res=null;
+    let res = null;
 
     if(navigator.onLine){
       const payload = {
-        action:"searchstudents",
-        searchMode:isGrSearch ? "gr" : "class",
-        schoolCode:loggedInSchoolCode,
-        grNo:grNo,
-        currentClass:classForSearch,
-        searchClass:classForSearch,
-        className:classForSearch,
-        class:classForSearch,
-        limit:isGrSearch ? PAGE_SIZE : 5000,
-        offset:isGrSearch ? currentPage * PAGE_SIZE : 0
+        action: "searchstudents",
+        schoolCode: loggedInSchoolCode,
+
+        grNo: grNo,
+
+        className: isClassSearch ? selectedClass : "",
+        currentClass: isClassSearch ? selectedClass : "",
+        searchClass: isClassSearch ? selectedClass : "",
+        class: isClassSearch ? selectedClass : "",
+
+        statusName: isStatusSearch ? selectedStatus : "",
+        searchStatus: isStatusSearch ? selectedStatus : "",
+
+        limit: isGrSearch ? PAGE_SIZE : 5000,
+        offset: isGrSearch ? currentPage * PAGE_SIZE : 0
       };
 
       try{
-        res=await postToScript(payload);
+        res = await postToScript(payload);
       }catch(e){
-        res=null;
+        res = null;
       }
     }
 
-    // Offline fallback only. Online class search needs Apps Script to accept currentClass/searchClass/className.
+    // Offline fallback
     if(!res || !res.success){
-      const found=getOffline().filter(x=>{
-        if(grNo) return digitsOnly(x.payload.grNo)===grNo;
-        return clean(x.payload.currentClass)===classForSearch;
+      const found = getOffline().filter(x=>{
+        if(grNo) return digitsOnly(x.payload.grNo) === grNo;
+
+        if(selectedClass){
+          return clean(x.payload.currentClass) === selectedClass &&
+            ["New Enrollment", "Promoted", "Retained"].includes(clean(x.payload.status));
+        }
+
+        if(selectedStatus){
+          return clean(x.payload.status) === selectedStatus;
+        }
+
+        return false;
       });
-      const cards=found.map(x=>({
-        grNo:x.payload.grNo,
-        name:x.payload.studentName,
-        father:x.payload.fatherName,
-        currentClass:x.payload.currentClass,
-        status:"Offline Pending",
-        photo:x.payload.studentPhotoBase64,
-        offline:true
+
+      const cards = found.map(x=>({
+        grNo: x.payload.grNo,
+        name: x.payload.studentName,
+        father: x.payload.fatherName,
+        currentClass: x.payload.currentClass,
+        status: x.payload.status || "Offline Pending",
+        photo: x.payload.studentPhotoBase64,
+        offline: true
       }));
-      res={success:true,students:cards,totalMatched:cards.length,offlineOnly:true};
+
+      res = {
+        success: true,
+        students: cards,
+        totalMatched: cards.length,
+        offlineOnly: true
+      };
     }
 
-    if(!res.success)throw new Error(res.message||"Search failed");
+    if(!res.success) throw new Error(res.message || "Search failed");
 
     let rawStudents = res.students || res.records || res.data || [];
+
     let students = rawStudents.map(normalizeStudent).filter(s=>{
-      const sGr = digitsOnly(s.grNo);
-      const sClass = clean(s.currentClass);
-      if(grNo) return sGr === grNo;
-      return sClass === classForSearch;
+      if(grNo) return digitsOnly(s.grNo) === grNo;
+
+      if(selectedClass){
+        return clean(s.currentClass) === selectedClass &&
+          ["New Enrollment", "Promoted", "Retained"].includes(clean(s.status));
+      }
+
+      if(selectedStatus){
+        return clean(s.status) === selectedStatus;
+      }
+
+      return false;
     });
 
     renderCards(students);
     lastSearchCount = students.length;
 
     if(lastSearchCount){
-      const filterText = grNo ? "GR No: " + grNo : "Class: " + classForSearch;
+      let filterText = "";
+      if(grNo) filterText = "GR No: " + grNo;
+      else if(selectedClass) filterText = "Class: " + selectedClass;
+      else filterText = "Status: " + selectedStatus;
+
       document.getElementById("searchStatus").textContent =
-        "Showing "+lastSearchCount+" student(s) | "+filterText;
+        "Showing " + lastSearchCount + " student(s) | " + filterText;
     }else{
-      document.getElementById("searchStatus").textContent = res.offlineOnly && navigator.onLine
-        ? "No student found. If class search still does not show online records, update Apps Script to support class search."
-        : "No student found.";
+      document.getElementById("searchStatus").textContent = "No student found.";
     }
 
   }catch(e){
-    document.getElementById("searchStatus").textContent=e.message;
+    document.getElementById("searchStatus").textContent = e.message;
   }
 }
 
 function clearSearchFilters(){
-  document.getElementById("searchGrNo").value="";
-  document.getElementById("searchClass").value="";
-  document.getElementById("searchResultCard").innerHTML="";
-  document.getElementById("searchStatus").textContent="";
-  currentPage=0;
-  lastSearchCount=0;
+  document.getElementById("searchGrNo").value = "";
+  document.getElementById("searchClass").value = "";
+  document.getElementById("searchStatusFilter").value = "";
+  document.getElementById("searchResultCard").innerHTML = "";
+  document.getElementById("searchStatus").textContent = "";
+  currentPage = 0;
+  lastSearchCount = 0;
 }
 
 function renderCards(students){
@@ -876,13 +922,15 @@ function renderCards(students){
 }
 
 function nextPage(){
-  if(clean(document.getElementById("searchClass").value) && !digitsOnly(document.getElementById("searchGrNo").value)) return;
+  const hasGr = !!digitsOnly(document.getElementById("searchGrNo").value);
+  if(!hasGr) return;
   if(lastSearchCount < PAGE_SIZE) return;
   searchStudents(currentPage + 1);
 }
 
 function prevPage(){
-  if(clean(document.getElementById("searchClass").value) && !digitsOnly(document.getElementById("searchGrNo").value)) return;
+  const hasGr = !!digitsOnly(document.getElementById("searchGrNo").value);
+  if(!hasGr) return;
   if(currentPage <= 0) return;
   searchStudents(currentPage - 1);
 }
@@ -1196,7 +1244,7 @@ document.getElementById("status").addEventListener("change", function(){
   }
 
   if(statusValue === "Retained"){
-    currentClassEl.value = previousClass(cls);
+    currentClassEl.value = cls;
   }
 
   if(statusValue === "Dropout" || statusValue === "Passout"){
@@ -1263,7 +1311,7 @@ function nextClass(cls){
 
 function statusClassPreview(currentClass, statusValue){
   if(statusValue === "Promoted") return nextClass(currentClass);
-  if(statusValue === "Retained") return previousClass(currentClass);
+  if(statusValue === "Retained") return currentClass;
   return currentClass;
 }
 
@@ -1345,8 +1393,24 @@ async function saveQuickStatus(){
     return;
   }
 
-  if(["Promoted","Retained","Dropout"].includes(newStatus) && !quickStatusPhotoBase64){
-    status("statusChangeStatus","Photo upload is required for Promoted, Retained, or Dropout.","error");
+  const oldStatus = quickStatusCurrentStudent ? quickStatusCurrentStudent.status : "";
+
+  if(newStatus === "Dropout" && !quickStatusPhotoBase64){
+    status("statusChangeStatus","Photo upload is required for Dropout.","error");
+    return;
+  }
+
+  if(
+    oldStatus === "Dropout" &&
+    newStatus !== "Dropout" &&
+    newStatus !== "Passout" &&
+    !quickStatusPhotoBase64
+  ){
+    status(
+      "statusChangeStatus",
+      "Student photo is required because this student was previously marked as Dropout.",
+      "error"
+    );
     return;
   }
 
