@@ -191,7 +191,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margi
 <button class="btn btn-primary" onclick="searchStudents(0)">Search</button>
 <button class="btn btn-secondary" onclick="clearSearchFilters()">Clear</button>
 </div>
-<div class="helper-note">GR No search shows one student. Class search shows only active enrollment. Status search shows Dropout or Passout students.</div>
+<div class="helper-note">GR No shows one student. Class shows only active enrollment students. Status shows Dropout or Passout students.</div>
 <div id="searchStatus" class="small"></div>
 <div id="searchResultCard"></div>
 
@@ -230,7 +230,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margi
 </div>
 </div>
 <div class="small" style="margin-top:8px">
-Photo is required only when a Dropout student is changed back to Promoted or Retained. Dropout and Passout will delete/clear the saved photo.
+Photo upload is required for Dropout. If a previously Dropout student is returned to New Enrollment, Promoted, or Retained, photo is required.
 </div>
 <div class="actions page-actions" id="statusTopActions">
 <button class="btn btn-primary" onclick="previewStatusStudent()">Find Student</button>
@@ -763,6 +763,7 @@ async function searchStudents(page=0){
   const isClassSearch = !grNo && !!selectedClass;
   const isStatusSearch = !grNo && !selectedClass && !!selectedStatus;
 
+  // Priority rule: GR No > Class > Status
   currentPage = isGrSearch ? page : 0;
 
   document.getElementById("searchResultCard").innerHTML = "";
@@ -781,13 +782,17 @@ async function searchStudents(page=0){
       const payload = {
         action: "searchstudents",
         schoolCode: loggedInSchoolCode,
+
         grNo: grNo,
+
         className: isClassSearch ? selectedClass : "",
         currentClass: isClassSearch ? selectedClass : "",
         searchClass: isClassSearch ? selectedClass : "",
         class: isClassSearch ? selectedClass : "",
+
         statusName: isStatusSearch ? selectedStatus : "",
         searchStatus: isStatusSearch ? selectedStatus : "",
+
         limit: isGrSearch ? PAGE_SIZE : 5000,
         offset: isGrSearch ? currentPage * PAGE_SIZE : 0
       };
@@ -799,6 +804,7 @@ async function searchStudents(page=0){
       }
     }
 
+    // Offline fallback
     if(!res || !res.success){
       const found = getOffline().filter(x=>{
         if(grNo) return digitsOnly(x.payload.grNo) === grNo;
@@ -825,7 +831,12 @@ async function searchStudents(page=0){
         offline: true
       }));
 
-      res = {success:true, students:cards, totalMatched:cards.length, offlineOnly:true};
+      res = {
+        success: true,
+        students: cards,
+        totalMatched: cards.length,
+        offlineOnly: true
+      };
     }
 
     if(!res.success) throw new Error(res.message || "Search failed");
@@ -911,13 +922,15 @@ function renderCards(students){
 }
 
 function nextPage(){
-  if(clean(document.getElementById("searchClass").value) && !digitsOnly(document.getElementById("searchGrNo").value)) return;
+  const hasGr = !!digitsOnly(document.getElementById("searchGrNo").value);
+  if(!hasGr) return;
   if(lastSearchCount < PAGE_SIZE) return;
   searchStudents(currentPage + 1);
 }
 
 function prevPage(){
-  if(clean(document.getElementById("searchClass").value) && !digitsOnly(document.getElementById("searchGrNo").value)) return;
+  const hasGr = !!digitsOnly(document.getElementById("searchGrNo").value);
+  if(!hasGr) return;
   if(currentPage <= 0) return;
   searchStudents(currentPage - 1);
 }
@@ -1382,14 +1395,20 @@ async function saveQuickStatus(){
 
   const oldStatus = quickStatusCurrentStudent ? quickStatusCurrentStudent.status : "";
 
+  if(newStatus === "Dropout" && !quickStatusPhotoBase64){
+    status("statusChangeStatus","Photo upload is required for Dropout.","error");
+    return;
+  }
+
   if(
     oldStatus === "Dropout" &&
-    (newStatus === "Promoted" || newStatus === "Retained") &&
+    newStatus !== "Dropout" &&
+    newStatus !== "Passout" &&
     !quickStatusPhotoBase64
   ){
     status(
       "statusChangeStatus",
-      "Student photo is required because this Dropout student is being reactivated.",
+      "Student photo is required because this student was previously marked as Dropout.",
       "error"
     );
     return;
