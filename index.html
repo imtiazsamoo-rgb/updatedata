@@ -97,6 +97,9 @@ input[readonly]{background:#f1f5f9;color:#475569}
 .offline-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:18px;padding:14px;margin-top:16px}.offline-row{border-top:1px solid #fed7aa;padding-top:9px;margin-top:9px;font-size:13px;color:#7c2d12}
 table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden}th,td{border-bottom:1px solid var(--line);padding:10px;font-size:13px;text-align:left}tr:last-child td{border-bottom:0}th{background:#eff6ff;color:#1e3a8a;font-weight:900}
 #paginationBox{justify-content:flex-end}
+.perm-grid label{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin:0;font-weight:800}
+.perm-grid input[type=checkbox]{width:auto;transform:scale(1.15);accent-color:var(--primary)}
+.admin-mini{font-size:12px;color:#64748b;line-height:1.5}
 @media(max-width:520px){.container{padding:10px}.header{padding:20px;display:block}.header:after{display:none}.btn{width:100%}.actions{display:grid;grid-template-columns:1fr}.toolbar{display:block}.nav-actions{display:grid;grid-template-columns:1fr 1fr;margin-top:12px}.more-list{position:static;margin-top:8px}.panel{padding:14px}.student-card{grid-template-columns:72px 1fr}.student-thumb{width:72px;height:92px}}
 
 </style>
@@ -140,6 +143,7 @@ table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;margi
         <button class="btn btn-warning" onclick="showStatusChange()">Status Change</button>
         <button class="btn btn-warning" onclick="showReports()">PDF Reports</button>
         <button class="btn btn-secondary" onclick="syncOfflineRecords()">Sync Pending</button>
+        <button class="btn btn-secondary" id="adminBtn" onclick="showAdminPanel()">Admin Panel</button>
         <button class="btn btn-danger" onclick="logoutUser()">Logout</button>
       </div>
     </details>
@@ -267,6 +271,38 @@ Photo upload is required for Dropout. If a previously Dropout student is returne
 <div class="actions page-actions">
 <button class="btn btn-warning" onclick="downloadSelectedPdf()">Download PDF</button>
 </div>
+</div>
+</div>
+
+<div class="panel hidden" id="adminPanel">
+<div class="box">
+<h3>Admin Panel - School User Permissions</h3>
+<div class="helper-note">Admin هتان هر School User جا اختيار وڌائي يا گھٽائي سگهي ٿو. User کي ٻيهر login ڪرڻ بعد نوان اختيار لاڳو ٿيندا.</div>
+
+<div class="grid two" style="margin-top:14px">
+<div><label>User Name / Email</label><input id="adminEmail" readonly></div>
+<div><label>School Code</label><input id="adminSchoolCode" readonly></div>
+</div>
+
+<div class="grid three perm-grid" style="margin-top:14px">
+<label><input type="checkbox" id="permView"> Dashboard / View</label>
+<label><input type="checkbox" id="permUpload"> New Admission</label>
+<label><input type="checkbox" id="permEdit"> Edit / Manage Student</label>
+<label><input type="checkbox" id="permChangeStatus"> Status Change</label>
+<label><input type="checkbox" id="permDownload"> PDF Download</label>
+<label><input type="checkbox" id="permReports"> Reports Menu</label>
+<label><input type="checkbox" id="permDelete"> Delete Student</label>
+<label><input type="checkbox" id="permAdmin"> Admin Panel Access</label>
+</div>
+
+<div class="actions page-actions">
+<button class="btn btn-success" onclick="savePermission()">Save Permission</button>
+<button class="btn btn-secondary" onclick="clearPermissionForm()">Clear</button>
+<button class="btn btn-primary" onclick="loadAdminUsers()">Refresh Users</button>
+</div>
+
+<div id="adminStatus" class="status"></div>
+<div id="adminUsersBox"></div>
 </div>
 </div>
 
@@ -480,6 +516,13 @@ function hideGoDashboardButton(){
 function formBack(){showDashboard()}
 
 async function postToScript(payload){
+  payload = payload || {};
+  if(currentUser && currentUser.username){
+    payload.userEmail = payload.userEmail || currentUser.username;
+    payload.adminEmail = payload.adminEmail || currentUser.username;
+    payload.updatedBy = payload.updatedBy || currentUser.username;
+  }
+
   const r = await fetch(APPS_SCRIPT_WEB_APP_URL,{
     method:"POST",
     headers:{"Content-Type":"text/plain;charset=utf-8"},
@@ -506,6 +549,38 @@ function photoUrl(url){
   const id=m?(m[1]||m[0]):"";
   return id?`https://drive.google.com/thumbnail?id=${id}&sz=w600`:url;
 }
+
+/* PERMISSIONS */
+function userPerm(){
+  return currentUser && currentUser.permissions ? currentUser.permissions : {};
+}
+
+function hasPerm(name){
+  const p = userPerm();
+  if(currentUser && String(currentUser.role||"").toLowerCase()==="admin") return true;
+  return !!p[name];
+}
+
+function deny(msg){
+  status("mainStatus", msg || "You are not allowed for this action.", "error");
+}
+
+function applyPermissions(){
+  const dashboardBtn = document.querySelector("button[onclick='showDashboard()']");
+  const admissionBtn = document.querySelector("button[onclick='newAdmission()']");
+  const searchBtn = document.querySelector("button[onclick='showSearch()']");
+  const statusBtn = document.querySelector("button[onclick='showStatusChange()']");
+  const reportsBtn = document.querySelector("button[onclick='showReports()']");
+  const adminBtn = document.getElementById("adminBtn");
+
+  if(dashboardBtn && !hasPerm("canView")) dashboardBtn.classList.add("hidden");
+  if(admissionBtn && !hasPerm("canUpload")) admissionBtn.classList.add("hidden");
+  if(searchBtn && !hasPerm("canView")) searchBtn.classList.add("hidden");
+  if(statusBtn && !hasPerm("canChangeStatus")) statusBtn.classList.add("hidden");
+  if(reportsBtn && !(hasPerm("canReports") || hasPerm("canDownload"))) reportsBtn.classList.add("hidden");
+  if(adminBtn && !hasPerm("canAdmin")) adminBtn.classList.add("hidden");
+}
+
 
 /* OFFLINE */
 function offlineKey(){return "IBFS_OFFLINE_"+loggedInSchoolCode}
@@ -635,6 +710,7 @@ async function loginUser(){
 
     hide("loginPanel");
     show("appPanel");
+    applyPermissions();
 
     await loadDashboard();
     showDashboard();
@@ -657,10 +733,12 @@ function hideAll(){
   hide("searchPanel");
   hide("reportsPanel");
   hide("statusPanel");
+  hide("adminPanel");
   hide("admissionForm");
 }
 
 async function showDashboard(){
+  if(!hasPerm("canView")){ deny("Dashboard permission not allowed."); return; }
   const top = document.getElementById("topMainActions");
   if(top) top.classList.remove("hidden");
   hideAll();
@@ -671,6 +749,7 @@ async function showDashboard(){
 }
 
 function showSearch(){
+  if(!hasPerm("canView")){ deny("Search permission not allowed."); return; }
   const top = document.getElementById("topMainActions");
   if(top) top.classList.remove("hidden");
   hideAll();
@@ -680,6 +759,7 @@ function showSearch(){
 }
 
 function showStatusChange(){
+  if(!hasPerm("canChangeStatus")){ deny("Status Change permission not allowed."); return; }
   hideAll();
   const top = document.getElementById("topMainActions");
   if(top) top.classList.remove("hidden");
@@ -697,6 +777,7 @@ function showStatusChange(){
 }
 
 function showReports(){
+  if(!(hasPerm("canReports") || hasPerm("canDownload"))){ deny("Reports permission not allowed."); return; }
   const top = document.getElementById("topMainActions");
   if(top) top.classList.remove("hidden");
   hideAll();
@@ -914,8 +995,8 @@ function renderCards(students){
           </div>
         </div>
         <div class="actions" style="margin-top:0">
-          <button class="btn btn-primary" onclick="openEdit('${safeGr}',${!!s.offline})">Manage</button>
-          <button class="btn btn-danger" onclick="deleteRecord('${safeGr}',${!!s.offline})">Delete</button>
+          ${hasPerm("canEdit") ? `<button class="btn btn-primary" onclick="openEdit('${safeGr}',${!!s.offline})">Manage</button>` : ""}
+          ${hasPerm("canDelete") ? `<button class="btn btn-danger" onclick="deleteRecord('${safeGr}',${!!s.offline})">Delete</button>` : ""}
         </div>
       </div>`;
   });
@@ -941,6 +1022,7 @@ function safeAttr(v){
 
 /* EDIT / DELETE */
 async function openEdit(grNo,isOffline){
+  if(!hasPerm("canEdit")){ deny("Edit permission not allowed."); return; }
   try{
     let rec=null;
 
@@ -961,6 +1043,7 @@ async function openEdit(grNo,isOffline){
 }
 
 async function deleteRecord(grNo,isOffline){
+  if(!hasPerm("canDelete")){ deny("Delete permission not allowed."); return; }
   if(!confirm("Delete this record?"))return;
 
   try{
@@ -982,6 +1065,7 @@ async function deleteRecord(grNo,isOffline){
 
 /* FORM */
 function newAdmission(){
+  if(!hasPerm("canUpload")){ deny("New Admission permission not allowed."); return; }
   const top = document.getElementById("topMainActions");
   if(top) top.classList.remove("hidden");
   resetForm();
@@ -1158,6 +1242,8 @@ async function submitForm(e){
 
   try{
     const action=document.getElementById("mode").value==="update"?"update":"create";
+    if(action==="create" && !hasPerm("canUpload")){ formStatus("New Admission permission not allowed.","error"); return; }
+    if(action==="update" && !hasPerm("canEdit")){ formStatus("Edit permission not allowed.","error"); return; }
     const p=collectPayload(action);
     const err=validatePayload(p);
 
@@ -1380,6 +1466,7 @@ async function previewStatusStudent(){
 }
 
 async function saveQuickStatus(){
+  if(!hasPerm("canChangeStatus")){ status("statusChangeStatus","Status Change permission not allowed.","error"); return; }
   const grNo = digitsOnly(document.getElementById("statusGrNo").value);
   const newStatus = document.getElementById("quickStatus").value;
 
@@ -1508,6 +1595,127 @@ function applyCrop(){
   formStatus("Photo cropped.","success");
 }
 
+
+
+/* ADMIN PANEL */
+let adminUsersCache = [];
+
+function showAdminPanel(){
+  if(!hasPerm("canAdmin")){
+    deny("Admin Panel permission not allowed.");
+    return;
+  }
+
+  const top = document.getElementById("topMainActions");
+  if(top) top.classList.remove("hidden");
+  hideAll();
+  show("adminPanel");
+  loadAdminUsers();
+}
+
+function clearPermissionForm(){
+  document.getElementById("adminEmail").value = "";
+  document.getElementById("adminSchoolCode").value = "";
+  ["permView","permUpload","permEdit","permChangeStatus","permDownload","permReports","permDelete","permAdmin"].forEach(id=>{
+    document.getElementById(id).checked = false;
+  });
+}
+
+async function loadAdminUsers(){
+  try{
+    status("adminStatus","Loading users...","info");
+    const res = await postToScript({action:"listusers"});
+    if(!res.success) throw new Error(res.message || "Users loading failed.");
+
+    adminUsersCache = res.users || [];
+
+    let html = `<table>
+      <tr>
+        <th>User</th><th>School</th><th>Role</th><th>Status</th><th>Current Permissions</th><th>Action</th>
+      </tr>`;
+
+    adminUsersCache.forEach((u,i)=>{
+      html += `
+        <tr>
+          <td>${u.email || ""}</td>
+          <td>${u.schoolCode || ""}</td>
+          <td>${u.role || ""}</td>
+          <td>${u.status || ""}</td>
+          <td class="admin-mini">
+            View: ${u.canView}<br>
+            Admission: ${u.canUpload}<br>
+            Edit: ${u.canEdit}<br>
+            Status Change: ${u.canChangeStatus}<br>
+            PDF Download: ${u.canDownload}<br>
+            Reports: ${u.canReports}<br>
+            Delete: ${u.canDelete}<br>
+            Admin: ${u.canAdmin}
+          </td>
+          <td><button class="btn btn-primary" onclick="editPermission(${i})">Edit Rights</button></td>
+        </tr>`;
+    });
+
+    html += "</table>";
+    document.getElementById("adminUsersBox").innerHTML = html;
+    status("adminStatus","Users loaded. Click Edit Rights to change permissions.","success");
+  }catch(e){
+    status("adminStatus",e.message,"error");
+  }
+}
+
+function editPermission(index){
+  const u = adminUsersCache[index];
+  if(!u) return;
+
+  document.getElementById("adminEmail").value = u.email || "";
+  document.getElementById("adminSchoolCode").value = u.schoolCode || "";
+  document.getElementById("permView").checked = !!u.canView;
+  document.getElementById("permUpload").checked = !!u.canUpload;
+  document.getElementById("permEdit").checked = !!u.canEdit;
+  document.getElementById("permChangeStatus").checked = !!u.canChangeStatus;
+  document.getElementById("permDownload").checked = !!u.canDownload;
+  document.getElementById("permReports").checked = !!u.canReports;
+  document.getElementById("permDelete").checked = !!u.canDelete;
+  document.getElementById("permAdmin").checked = !!u.canAdmin;
+
+  document.getElementById("adminEmail").scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+async function savePermission(){
+  const email = clean(document.getElementById("adminEmail").value);
+  const schoolCode = clean(document.getElementById("adminSchoolCode").value);
+
+  if(!email || !schoolCode){
+    status("adminStatus","Please select a user first.","error");
+    return;
+  }
+
+  try{
+    status("adminStatus","Saving permission...","info");
+
+    const res = await postToScript({
+      action:"savepermission",
+      email,
+      targetSchoolCode:schoolCode,
+      canView:document.getElementById("permView").checked,
+      canUpload:document.getElementById("permUpload").checked,
+      canEdit:document.getElementById("permEdit").checked,
+      canChangeStatus:document.getElementById("permChangeStatus").checked,
+      canDownload:document.getElementById("permDownload").checked,
+      canReports:document.getElementById("permReports").checked,
+      canDelete:document.getElementById("permDelete").checked,
+      canAdmin:document.getElementById("permAdmin").checked
+    });
+
+    if(!res.success) throw new Error(res.message || "Permission save failed.");
+
+    status("adminStatus",res.message || "Permission saved.","success");
+    await loadAdminUsers();
+  }catch(e){
+    status("adminStatus",e.message,"error");
+  }
+}
+
 /* PDF */
 function base64ToBlob(base64,type){
   const bin=atob(base64);
@@ -1521,6 +1729,7 @@ function base64ToBlob(base64,type){
 }
 
 async function downloadSelectedPdf(){
+  if(!hasPerm("canDownload")){ status("mainStatus","PDF Download permission not allowed.","error"); return; }
   const type = document.getElementById("reportType").value;
 
   if(!type){
