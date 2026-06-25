@@ -746,35 +746,24 @@ document.addEventListener("DOMContentLoaded", () => {
         
         applyPermissions(); // Hide buttons initially until permissions are loaded
         
-        // If not admin and permissions are empty, try to fetch from backend using Admin email to bypass check
+        // We removed the listusers call because it downloads the entire database and makes the app slow.
+        // Instead, we will grant default permissions based on the Central Portal role.
         if (!isAdmin && Object.keys(currentUser.permissions).length === 0) {
-            postToScript({action: "listusers", adminEmail: "imtiaz.samoo@gmail.com"}).then(res => {
-                if (res.success && res.users) {
-                    const emailToMatch = String(currentUser.username).trim().toLowerCase();
-                    const scToMatch = String(currentUser.schoolCode).trim().toLowerCase();
-                    const me = res.users.find(u => {
-                        const uEmail = String(u.email || "").trim().toLowerCase();
-                        const uSc = String(u.schoolCode || "").trim().toLowerCase();
-                        return (uEmail === emailToMatch) || (uSc === scToMatch && uSc !== "" && uSc !== "all");
-                    });
-                    
-                    if (me) {
-                        currentUser.permissions = me;
-                        applyPermissions();
-                        loadDashboard().then(() => showDashboard());
-                    } else {
-                        status("mainStatus", "Permissions not found for your email.", "error");
-                    }
-                } else {
-                    status("mainStatus", "Failed to load permissions. Please contact Admin.", "error");
-                }
-            }).catch(e => {
-                status("mainStatus", "Error loading permissions.", "error");
-            });
-        } else {
-            applyPermissions();
-            loadDashboard().then(() => showDashboard());
+            // Give default basic permissions for non-admins to keep the app extremely fast
+            currentUser.permissions = {
+                canView: true,
+                canDownload: true, // Allow downloading PDF
+                canUpload: false, // Change to true if you want general users to do New Admission
+                canEdit: false,
+                canChangeStatus: false,
+                canReports: false,
+                canDelete: false,
+                canAdmin: false
+            };
         }
+        
+        applyPermissions();
+        loadDashboard().then(() => showDashboard());
       } else {
         if (loginPanel) loginPanel.style.display = "block";
         status("loginStatus", data.message || "Invalid Portal Session.", "error");
