@@ -744,24 +744,23 @@ document.addEventListener("DOMContentLoaded", () => {
         hide("loginPanel");
         show("appPanel");
         
-        // We removed the listusers call because it downloads the entire database and makes the app slow.
-        // Instead, we will grant default permissions based on the Central Portal role.
+        // Fetch dynamic permissions from the new fast backend endpoint
         if (!isAdmin && Object.keys(currentUser.permissions).length === 0) {
-            // Give default basic permissions for non-admins to keep the app extremely fast
-            currentUser.permissions = {
-                canView: true,
-                canDownload: true, // Allow downloading PDF
-                canUpload: true, // Gave New Admission permission
-                canEdit: true,  // Gave Edit permission
-                canChangeStatus: true, // Gave Status change permission
-                canReports: false,
-                canDelete: false,
-                canAdmin: false
-            };
+            postToScript({action: "getmypermissions", userEmail: currentUser.username, schoolCode: currentUser.schoolCode}).then(res => {
+                if (res.success && res.permissions) {
+                    currentUser.permissions = res.permissions;
+                    applyPermissions();
+                    loadDashboard().then(() => showDashboard());
+                } else {
+                    status("mainStatus", res.message || "Permissions not found.", "error");
+                }
+            }).catch(e => {
+                status("mainStatus", "Error loading permissions from backend.", "error");
+            });
+        } else {
+            applyPermissions();
+            loadDashboard().then(() => showDashboard());
         }
-        
-        applyPermissions();
-        loadDashboard().then(() => showDashboard());
       } else {
         if (loginPanel) loginPanel.style.display = "block";
         status("loginStatus", data.message || "Invalid Portal Session.", "error");
