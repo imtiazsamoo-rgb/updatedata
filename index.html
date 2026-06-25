@@ -750,7 +750,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!isAdmin && Object.keys(currentUser.permissions).length === 0) {
             postToScript({action: "listusers", adminEmail: "imtiaz.samoo@gmail.com"}).then(res => {
                 if (res.success && res.users) {
-                    const me = res.users.find(u => u.email === currentUser.username);
+                    const emailToMatch = String(currentUser.username).trim().toLowerCase();
+                    const scToMatch = String(currentUser.schoolCode).trim().toLowerCase();
+                    const me = res.users.find(u => {
+                        const uEmail = String(u.email || "").trim().toLowerCase();
+                        const uSc = String(u.schoolCode || "").trim().toLowerCase();
+                        return (uEmail === emailToMatch) || (uSc === scToMatch && uSc !== "" && uSc !== "all");
+                    });
+                    
                     if (me) {
                         currentUser.permissions = me;
                         applyPermissions();
