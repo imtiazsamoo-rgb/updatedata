@@ -685,6 +685,71 @@ async function syncOfflineRecords(){
 
 window.addEventListener("online",()=>{if(loggedInSchoolCode)syncOfflineRecords()});
 
+// --- IBFS PORTAL SSO INTERCEPTION ---
+document.addEventListener("DOMContentLoaded", () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const portalToken = urlParams.get("token");
+  const portalApiUrl = urlParams.get("portalApiUrl");
+  const portalAppId = urlParams.get("appId") || "updateDataApp";
+
+  if (portalToken && portalApiUrl) {
+    const loginPanel = document.getElementById("loginPanel");
+    if (loginPanel) {
+      loginPanel.style.display = "none";
+      const loader = document.createElement("div");
+      loader.id = "ssoLoader";
+      loader.style.cssText = "position:fixed;inset:0;background:linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;";
+      loader.innerHTML = `
+        <div style="width:70px;height:70px;border:5px solid rgba(25,118,210,0.2);border-top-color:#1976D2;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:24px;box-shadow:0 0 20px rgba(25,118,210,0.2);"></div>
+        <h2 style="color:#1e293b;font-size:24px;font-weight:700;margin:0 0 8px 0;letter-spacing:-0.5px;">Connecting to Central Portal</h2>
+        <p style="color:#64748b;font-size:16px;margin:0;font-weight:500;">Please wait while we verify your secure session...</p>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+      `;
+      document.body.appendChild(loader);
+    }
+    
+    fetch(portalApiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "verifyAccess",
+        token: portalToken,
+        appId: portalAppId
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (document.getElementById("ssoLoader")) document.getElementById("ssoLoader").remove();
+      if (data.status === "success" && data.allowed) {
+        currentUser = data.user;
+        loggedInSchoolCode = clean(data.user.schoolCode);
+        
+        document.getElementById("loggedInSchoolLabel").textContent=loggedInSchoolCode;
+        document.getElementById("schoolCode").value=loggedInSchoolCode;
+        
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        hide("loginPanel");
+        show("appPanel");
+        applyPermissions();
+        
+        loadDashboard().then(() => {
+          showDashboard();
+        });
+      } else {
+        if (loginPanel) loginPanel.style.display = "block";
+        status("loginStatus", data.message || "Invalid Portal Session.", "error");
+      }
+    })
+    .catch(e => {
+      if (document.getElementById("ssoLoader")) document.getElementById("ssoLoader").remove();
+      if (loginPanel) loginPanel.style.display = "block";
+      status("loginStatus", "Portal connection failed.", "error");
+    });
+  }
+});
+// --- END PORTAL SSO INTERCEPTION ---
+
 /* LOGIN */
 async function loginUser(){
   clearStatus("loginStatus");
