@@ -724,9 +724,9 @@ document.addEventListener("DOMContentLoaded", () => {
         // Map Central Portal user to Update Data user format
         const isAdmin = String(data.user.role || "").toLowerCase() === "admin";
         currentUser = {
-          username: isAdmin ? "admin" : (data.user.email || data.user.username),
+          username: data.user.email || data.user.username,
           role: data.user.role,
-          schoolCode: clean(data.user.scope || data.user.schoolCode || (isAdmin ? "ADMIN" : "")),
+          schoolCode: clean(data.user.scope || data.user.schoolCode || (isAdmin ? "ALL" : "")),
           permissions: data.user.permissions || {}
         };
         loggedInSchoolCode = currentUser.schoolCode;
