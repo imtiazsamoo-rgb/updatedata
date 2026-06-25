@@ -721,12 +721,17 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(data => {
       if (document.getElementById("ssoLoader")) document.getElementById("ssoLoader").remove();
       if (data.status === "success" && data.allowed) {
-        // Map Central Portal user to Update Data user format
         const isAdmin = String(data.user.role || "").toLowerCase() === "admin";
+        
+        let sc = data.user.scope || data.user.schoolCode || (isAdmin ? "ALL" : "");
+        if (sc.toLowerCase().startsWith("school=")) {
+            sc = sc.substring(7);
+        }
+        
         currentUser = {
           username: data.user.email || data.user.username,
           role: data.user.role,
-          schoolCode: clean(data.user.scope || data.user.schoolCode || (isAdmin ? "ALL" : "")),
+          schoolCode: clean(sc),
           permissions: data.user.permissions || {}
         };
         loggedInSchoolCode = currentUser.schoolCode;
@@ -738,11 +743,30 @@ document.addEventListener("DOMContentLoaded", () => {
         
         hide("loginPanel");
         show("appPanel");
-        applyPermissions();
         
-        loadDashboard().then(() => {
-          showDashboard();
-        });
+        // If not admin and permissions are empty, try to fetch from backend
+        if (!isAdmin && Object.keys(currentUser.permissions).length === 0) {
+            postToScript({action: "listusers"}).then(res => {
+                if (res.success && res.users) {
+                    const me = res.users.find(u => u.email === currentUser.username);
+                    if (me) {
+                        currentUser.permissions = me;
+                        applyPermissions();
+                        loadDashboard().then(() => showDashboard());
+                    } else {
+                        status("mainStatus", "Permissions not found for your email.", "error");
+                    }
+                } else {
+                    // Backend blocked listusers. We must default to basic permissions or wait.
+                    status("mainStatus", "Failed to load permissions. Please contact Admin.", "error");
+                }
+            }).catch(e => {
+                status("mainStatus", "Error loading permissions.", "error");
+            });
+        } else {
+            applyPermissions();
+            loadDashboard().then(() => showDashboard());
+        }
       } else {
         if (loginPanel) loginPanel.style.display = "block";
         status("loginStatus", data.message || "Invalid Portal Session.", "error");
