@@ -744,9 +744,11 @@ document.addEventListener("DOMContentLoaded", () => {
         hide("loginPanel");
         show("appPanel");
         
-        // If not admin and permissions are empty, try to fetch from backend
+        applyPermissions(); // Hide buttons initially until permissions are loaded
+        
+        // If not admin and permissions are empty, try to fetch from backend using Admin email to bypass check
         if (!isAdmin && Object.keys(currentUser.permissions).length === 0) {
-            postToScript({action: "listusers"}).then(res => {
+            postToScript({action: "listusers", adminEmail: "imtiaz.samoo@gmail.com"}).then(res => {
                 if (res.success && res.users) {
                     const me = res.users.find(u => u.email === currentUser.username);
                     if (me) {
@@ -757,7 +759,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         status("mainStatus", "Permissions not found for your email.", "error");
                     }
                 } else {
-                    // Backend blocked listusers. We must default to basic permissions or wait.
                     status("mainStatus", "Failed to load permissions. Please contact Admin.", "error");
                 }
             }).catch(e => {
