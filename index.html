@@ -721,8 +721,15 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(data => {
       if (document.getElementById("ssoLoader")) document.getElementById("ssoLoader").remove();
       if (data.status === "success" && data.allowed) {
-        currentUser = data.user;
-        loggedInSchoolCode = clean(data.user.schoolCode);
+        // Map Central Portal user to Update Data user format
+        const isAdmin = String(data.user.role || "").toLowerCase() === "admin";
+        currentUser = {
+          username: isAdmin ? "admin" : (data.user.email || data.user.username),
+          role: data.user.role,
+          schoolCode: clean(data.user.scope || data.user.schoolCode || (isAdmin ? "ADMIN" : "")),
+          permissions: data.user.permissions || {}
+        };
+        loggedInSchoolCode = currentUser.schoolCode;
         
         document.getElementById("loggedInSchoolLabel").textContent=loggedInSchoolCode;
         document.getElementById("schoolCode").value=loggedInSchoolCode;
