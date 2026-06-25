@@ -744,8 +744,6 @@ document.addEventListener("DOMContentLoaded", () => {
         hide("loginPanel");
         show("appPanel");
         
-        applyPermissions(); // Hide buttons initially until permissions are loaded
-        
         // We removed the listusers call because it downloads the entire database and makes the app slow.
         // Instead, we will grant default permissions based on the Central Portal role.
         if (!isAdmin && Object.keys(currentUser.permissions).length === 0) {
@@ -753,9 +751,9 @@ document.addEventListener("DOMContentLoaded", () => {
             currentUser.permissions = {
                 canView: true,
                 canDownload: true, // Allow downloading PDF
-                canUpload: false, // Change to true if you want general users to do New Admission
-                canEdit: false,
-                canChangeStatus: false,
+                canUpload: true, // Gave New Admission permission
+                canEdit: true,  // Gave Edit permission
+                canChangeStatus: true, // Gave Status change permission
                 canReports: false,
                 canDelete: false,
                 canAdmin: false
